@@ -37,6 +37,18 @@ mcd ()
     cd -P -- "$1"
 }
 
+sl (){
+  printf $LCYAN;
+  printf "                         __                    .__                                   \n";
+  printf "  ____________    ____  |  | __  ____    ____  |  |  _____    ___.__.  ____  _______ \n";
+  printf " /  ___/\____ \  /  _ \ |  |/ /_/ __ \  /    \ |  |  \__  \  <   |  |_/ __ \ \_  __ \\"; printf "\n";
+  printf " \___ \ |  |_> >(  <_> )|    < \  ___/ |   |  \|  |__ / __ \_ \___  |\  ___/  |  | \/\n";
+  printf "/____  >|   __/  \____/ |__|_ \ \___  >|___|  /|____/(____  / / ____| \___  > |__|   \n";
+  printf "     \/ |__|                 \/     \/      \/            \/  \/          \/         \n\n";
+
+  printf $RESTORE;
+}
+
 # COLORS
 
 RESTORE='\033[0m'
@@ -57,18 +69,9 @@ LPURPLE='\033[01;35m'
 LCYAN='\033[01;36m'
 WHITE='\033[01;37m'
 
-# PROMPT
+# LOGIN / PROMPT
 export PS1="🥑$LIGHTGRAY $LCYAN\w$LIGHTGRAY ❯ "
 
-printf $LCYAN
-printf "                         __                    .__                                   \n";
-printf "  ____________    ____  |  | __  ____    ____  |  |  _____    ___.__.  ____  _______ \n";
-printf " /  ___/\____ \  /  _ \ |  |/ /_/ __ \  /    \ |  |  \__  \  <   |  |_/ __ \ \_  __ \\"; printf "\n";
-printf " \___ \ |  |_> >(  <_> )|    < \  ___/ |   |  \|  |__ / __ \_ \___  |\  ___/  |  | \/\n";
-printf "/____  >|   __/  \____/ |__|_ \ \___  >|___|  /|____/(____  / / ____| \___  > |__|   \n";
-printf "     \/ |__|                 \/     \/      \/            \/  \/          \/         \n\n";
-
-printf $RESTORE;
-
+sl
 printf "\n$GREEN Well $(id -F), it seems you survived our last encounter…\n\n$LIGHTGRAY";
 
