@@ -1,3 +1,5 @@
+# curl -s https://raw.githubusercontent.com/nealrs/dotfiles/master/sl.sh | bash
+
 sl (){
   printf $LCYAN;
   printf "                         __                    .__                                   \n";
