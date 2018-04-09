@@ -4,6 +4,7 @@ source /usr/local/opt/autoenv/activate.sh
 source ~/.bash_git
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+source /usr/local/git/contrib/completion/git-completion.bash
 
 # ALIASES
 
@@ -49,6 +50,26 @@ sl (){
   printf $RESTORE;
 }
 
+function git_branch {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* (*\([^)]*\))*/\1/'
+}
+
+function markup_git_branch {
+  if [[ -n $@ ]]; then
+    if [[ -z $(git status --porcelain 2> /dev/null | tail -n1) ]]; then
+      echo -e " \001\033[32m\002($@)\001\033[0m\002"
+    else
+      echo -e " \001\033[31m\002($@)\001\033[0m\002"
+    fi
+  fi
+}
+
+function __git_prompt {
+  GIT_PS1_SHOWDIRTYSTATE=1
+  [ `git config user.pair` ] && GIT_PS1_PAIR="`git config user.pair`@"
+  __git_ps1 " $GIT_PS1_PAIR%s" | sed 's/ \([+*]\{1,\}\)$/\1/'
+}
+
 # COLORS
 
 RESTORE='\033[0m'
@@ -70,6 +91,8 @@ LCYAN='\033[01;36m'
 WHITE='\033[01;37m'
 
 # LOGIN / PROMPT
+GIT_PS1_SHOWDIRTYSTATE=true
+
 export PS1="🥑$LIGHTGRAY $LCYAN\w$LIGHTGRAY ❯ "
 
 sl
