@@ -35,7 +35,7 @@ declare -a arr=(
 ## now loop through the above array
 for i in "${arr[@]}"
 do
-  printf "\n\nCHECKING: $LCYAN$i$RESTORE\n"
+  printf "\n\n$LCYAN$i$RESTORE\n"
   curl -s nealrs.herokuapp.com/$i/ | python -m json.tool
   # curl -s nealrs.herokuapp.com/mta/subway/ | python -m json.tool
 done

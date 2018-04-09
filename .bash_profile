@@ -50,6 +50,28 @@ sl (){
   printf $RESTORE;
 }
 
+mta(){
+  declare -a subway=(
+    "subway/ace"
+    "subway/bdfm"
+    "subway/g"
+    "subway/l"
+    "subway/nqrw"
+    "subway/jz"
+    "subway/123"
+    "subway/456"
+    "subway/7" 
+    "subway/sir" 
+    "subway/s" 
+  )
+
+  printf "$LCYAN\nNYC SUBWAY STATUS$RESTORE\n"
+  for i in "${subway[@]}"
+  do
+    curl -s nealrs.herokuapp.com/$i/ | jq -r '.titleText | sub(" SUBWAY "; " ")'
+  done
+}
+
 function git_branch {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* (*\([^)]*\))*/\1/'
 }
