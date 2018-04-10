@@ -1,10 +1,11 @@
 # IMPORTS ETC
-export PATH="/usr/local/opt/openssl/bin:$PATH:/usr/local/share/npm/bin/:~/~npm-global/bin"
+#export PATH="/usr/local/opt/openssl/bin:$PATH:/usr/local/share/npm/bin/:~/~npm-global/bin:"
+export PATH="/usr/local/opt/openssl/bin:$PATH:/usr/local/share/npm/bin/:~/~npm-global/bin:$HOME/.npm-packages/bin:$PATH"
+
 source /usr/local/opt/autoenv/activate.sh
 source ~/.bash_git
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-source /usr/local/git/contrib/completion/git-completion.bash
 
 # ALIASES
 
@@ -27,18 +28,16 @@ alias repos="cd ~/documents/repos"
 
 # FUNCTIONS
 
-lzip()
-{
+function lzip(){
   zip -FSr lambda.zip *
 }
 
-mcd ()
-{
+function mcd (){
   mkdir -p -- "$1" &&
     cd -P -- "$1"
 }
 
-sl (){
+function sl (){
   printf $LCYAN;
   printf "                         __                    .__                                   \n";
   printf "  ____________    ____  |  | __  ____    ____  |  |  _____    ___.__.  ____  _______ \n";
@@ -50,26 +49,9 @@ sl (){
   printf $RESTORE;
 }
 
-mta(){
-  declare -a subway=(
-    "subway/ace"
-    "subway/bdfm"
-    "subway/g"
-    "subway/l"
-    "subway/nqrw"
-    "subway/jz"
-    "subway/123"
-    "subway/456"
-    "subway/7" 
-    "subway/sir" 
-    "subway/s" 
-  )
-
+function mta(){
   printf "$LCYAN\nNYC SUBWAY STATUS$RESTORE\n"
-  for i in "${subway[@]}"
-  do
-    curl -s nealrs.herokuapp.com/$i/ | jq -r '.titleText | sub(" SUBWAY "; " ")'
-  done
+  curl -s nealrs.herokuapp.com/nyc/
 }
 
 function git_branch {

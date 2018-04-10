@@ -37,5 +37,4 @@ for i in "${arr[@]}"
 do
   printf "\n\n$LCYAN$i$RESTORE\n"
   curl -s nealrs.herokuapp.com/$i/ | python -m json.tool
-  # curl -s nealrs.herokuapp.com/mta/subway/ | python -m json.tool
 done
