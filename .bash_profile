@@ -146,7 +146,7 @@ export SCM_GIT_SHOW_MINIMAL_INFO=true
 # Set theme
 export BASH_IT_THEME="powerline"
 
-POWERLINE_PROMPT="battery user_info scm cwd"
+POWERLINE_PROMPT="user_info scm cwd"
 
 # Set Xterm/screen/Tmux title with only a short hostname.
 # Uncomment this (or set SHORT_HOSTNAME to something else),
