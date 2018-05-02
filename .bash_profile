@@ -29,7 +29,7 @@ alias gr="git rm"
 alias ..="cd .."
 alias ~="cd ~"
 alias gactions=~/gactions
-alias weather="curl wttr.in/11205"
+alias weather="curl wttr.in/11205?q"
 alias repos="cd ~/documents/repos"
 
 # AWS MOCKING STUFF
@@ -109,8 +109,10 @@ GIT_PS1_SHOWDIRTYSTATE=true
 
 export PS1="🥑$LIGHTGRAY $LCYAN\w$LIGHTGRAY ❯ "
 
-archey
+#archey
 hi
+#curl wttr.in/10001?0
+curl wttr.in/11205?0
 printf "\n$GREEN Well $(id -F), it seems you survived our last encounter…\n\n$LIGHTGRAY";
 
 ###### BASH IT ######
@@ -120,7 +122,6 @@ export BASH_IT="/Users/nealrs/.bash_it"
 
 # Lock and Load a custom theme file
 # location /.bash_it/themes/
-export BASH_IT_THEME='bobby'
 
 # (Advanced): Change this to the name of your remote repo if you
 # cloned bash-it with a remote other than origin such as `bash-it`.
@@ -171,4 +172,4 @@ POWERLINE_PROMPT="user_info scm cwd"
 # export BASH_IT_AUTOMATIC_RELOAD_AFTER_CONFIG_CHANGE=1
 
 # Load Bash It
-source "$BASH_IT"/bash_it.sh
+#source "$BASH_IT"/bash_it.sh
