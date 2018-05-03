@@ -16,6 +16,7 @@ export NVM_DIR="$HOME/.nvm"
 # ALIASES
 
 alias resource="source ~/.bash_profile"
+alias reload="source ~/.bash_profile"
 alias ngrok=~/ngrok
 alias py=python
 alias gc="git commit -m"
@@ -29,7 +30,6 @@ alias gr="git rm"
 alias ..="cd .."
 alias ~="cd ~"
 alias gactions=~/gactions
-alias weather="curl wttr.in/11205?q"
 alias repos="cd ~/documents/repos"
 
 # AWS MOCKING STUFF
@@ -58,10 +58,23 @@ function hi (){
 
   printf $RESTORE;
 }
-
+function weather(){
+  printf "$LCYAN\nWEATHER (11205)$RESTORE"
+  curl -s wttr.in/11205?0 | tail -n +2
+}
 function mta(){
   printf "$LCYAN\nNYC SUBWAY STATUS$RESTORE\n"
   curl -s nealrs.herokuapp.com/nyc/
+}
+
+function citibike(){
+  printf "\n\033[01;36mCITIBIKE STATUS\033[0m"
+  bikes get work home
+}
+
+function tv(){
+  printf "$LCYAN\nPrimetime TV Schedule$RESTORE"
+  curl -s nealrs.herokuapp.com/tv/ | tail -n +2
 }
 
 function git_branch {
@@ -83,6 +96,15 @@ function __git_prompt {
   [ `git config user.pair` ] && GIT_PS1_PAIR="`git config user.pair`@"
   __git_ps1 " $GIT_PS1_PAIR%s" | sed 's/ \([+*]\{1,\}\)$/\1/'
 }
+
+function nyc {
+  weather
+  mta
+  #citibike
+  tv
+}
+
+
 
 # COLORS
 
@@ -109,10 +131,18 @@ GIT_PS1_SHOWDIRTYSTATE=true
 
 export PS1="🥑$LIGHTGRAY $LCYAN\w$LIGHTGRAY ❯ "
 
-#archey
+#### powerline-shell
+function _update_ps1() {
+    PS1=$(powerline-shell $?)
+}
+
+if [[ $TERM != linux && ! $PROMPT_COMMAND =~ _update_ps1 ]]; then
+    PROMPT_COMMAND="_update_ps1; $PROMPT_COMMAND"
+fi
+####
+
 hi
-#curl wttr.in/10001?0
-curl wttr.in/11205?0
+curl -s wttr.in/11205?0 | tail -n +2
 printf "\n$GREEN Well $(id -F), it seems you survived our last encounter…\n\n$LIGHTGRAY";
 
 ###### BASH IT ######
