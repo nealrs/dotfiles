@@ -102,7 +102,7 @@ function gdep {
       read -p "CONFIRM PRODUCTION DEPLOY $(git describe --tags --abbrev=0) => $1 | (Y/N) " yn
       case $yn in
         [Yy]* ) git checkout master && git checkout master && git reset --hard origin/master && git tag $1 && git push --tags ; break;;
-        [Nn]* ) exit;;
+        [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
       esac
     done
