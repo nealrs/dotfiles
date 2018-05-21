@@ -23,6 +23,7 @@ alias gc="git commit -m"
 alias gca="git commit -am"
 alias gs="git status"
 alias gp="git push"
+alias gpp="git push -u origin master"
 alias gd="git diff"
 alias ga="git add"
 alias gaa="git add ."
@@ -31,6 +32,9 @@ alias ..="cd .."
 alias ~="cd ~"
 alias gactions=~/gactions
 alias repos="cd ~/documents/repos"
+alias k="clear"
+alias iglu="~/igluctl"
+alias iglugui="~/schema-guru-webui-0.6.2"
 
 # AWS MOCKING STUFF
 
@@ -58,10 +62,12 @@ function hi (){
 
   printf $RESTORE;
 }
+
 function weather(){
   printf "$LCYAN\nWEATHER (11205)$RESTORE"
   curl -s wttr.in/11205?0 | tail -n +2
 }
+
 function mta(){
   printf "$LCYAN\nNYC SUBWAY STATUS$RESTORE\n"
   curl -s nealrs.herokuapp.com/nyc/
@@ -73,7 +79,7 @@ function citibike(){
 }
 
 function tv(){
-  printf "$LCYAN\nPrimetime TV Schedule$RESTORE"
+  printf "$LCYAN\nTONIGHT ON TV$RESTORE"
   curl -s nealrs.herokuapp.com/tv/ | tail -n +2
 }
 
@@ -104,7 +110,21 @@ function nyc {
   tv
 }
 
-
+function gdep {
+  if [ -n "$1" ]
+  then
+    while true; do
+      read -p "CONFIRM PRODUCTION DEPLOY $(git describe --tags --abbrev=0) => $1 | (Y/N) " yn
+      case $yn in
+        [Yy]* ) git checkout master && git checkout master && git reset --hard origin/master && git tag $1 && git push --tags ; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+      esac
+    done
+  else
+    printf "$LRED\nYOU MUST INCLUDE A TAG\n$RESTORE"
+  fi
+}
 
 # COLORS
 
@@ -148,7 +168,7 @@ printf "\n$GREEN Well $(id -F), it seems you survived our last encounter…\n\n$
 ###### BASH IT ######
 
 # Path to the bash it configuration
-export BASH_IT="/Users/nealrs/.bash_it"
+#export BASH_IT="/Users/nealrs/.bash_it"
 
 # Lock and Load a custom theme file
 # location /.bash_it/themes/
@@ -158,16 +178,16 @@ export BASH_IT="/Users/nealrs/.bash_it"
 # export BASH_IT_REMOTE='bash-it'
 
 # Your place for hosting Git repos. I use this for private repos.
-export GIT_HOSTING='neal@spokenlayer.com'
+#export GIT_HOSTING='neal@spokenlayer.com'
 
 # Don't check mail when opening terminal.
 unset MAILCHECK
 
 # Change this to your console based IRC client of choice.
-export IRC_CLIENT='irssi'
+#export IRC_CLIENT='irssi'
 
 # Set this to the command you use for todo.txt-cli
-export TODO="t"
+#export TODO="t"
 
 # Set this to false to turn off version control status checking within the prompt for all themes
 export SCM_CHECK=true
@@ -175,9 +195,9 @@ export SCM_GIT_SHOW_DETAILS=true
 export SCM_GIT_SHOW_MINIMAL_INFO=true
 
 # Set theme
-export BASH_IT_THEME="powerline"
+#export BASH_IT_THEME="powerline"
 
-POWERLINE_PROMPT="user_info scm cwd"
+#POWERLINE_PROMPT="user_info scm cwd"
 
 # Set Xterm/screen/Tmux title with only a short hostname.
 # Uncomment this (or set SHORT_HOSTNAME to something else),
