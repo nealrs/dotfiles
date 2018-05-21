@@ -99,7 +99,7 @@ function gdep {
   if [ -n "$1" ]
   then
     while true; do
-      read -p "CONFIRM PRODUCTION DEPLOY $(git describe --tags --abbrev=0) => $1 | (Y/N) " yn
+      read -p "CONFIRM PRODUCTION DEPLOY => $1 | (Y/N) " yn
       case $yn in
         [Yy]* ) git checkout master && git checkout master && git reset --hard origin/master && git tag $1 && git push --tags ; break;;
         [Nn]* ) break;;
