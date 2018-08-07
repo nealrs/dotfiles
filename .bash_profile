@@ -17,6 +17,7 @@ export NVM_DIR="$HOME/.nvm"
 
 alias resource="source ~/.bash_profile"
 alias reload="source ~/.bash_profile"
+alias rel="source ~/.bash_profile"
 alias ngrok=~/ngrok
 alias py=python
 alias gc="git commit -m"
@@ -35,10 +36,20 @@ alias repos="cd ~/documents/repos"
 alias k="clear"
 alias iglu="~/igluctl"
 alias iglugui="~/schema-guru-webui-0.6.2"
+alias invoke="~/documents/repos/smart-speaker-fulfillments/alexa/invocation-tester/avs.sh"
+alias smongo="mongod --dbpath data/db"
+alias smongod="mongod --dbpath data/db --fork --logpath data/log/mongod.log"
+alias mongol="mongo --host 127.0.0.1:27017"
 
 # AWS MOCKING STUFF
 
 alias ddblocal="cd ~/documents/repos/tools/ddb_local/ && java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb"
+
+# SSH TUNNELING STUFF / BASTION
+
+function publicdb (){
+  ssh -N -L 5430:sapi.rds.spokenlayer.local:5432 ec2-user@bastion."$1".spokenlayer.net
+}
 
 # FUNCTIONS
 
@@ -123,6 +134,17 @@ function gdep {
     done
   else
     printf "$LRED\nYOU MUST INCLUDE A TAG\n$RESTORE"
+  fi
+}
+
+# tail logs from aws
+function awslog {
+  if [[ $1 == "google" ]]; then
+    awslogs get /aws/lambda/google-branded-fulfillments --watch  --profile "$2"
+  fi
+
+  if [[ $1 == "alexa" ]]; then 
+    awslogs get /aws/lambda/alexa-branded-fulfillments --watch  --profile "$2"
   fi
 }
 

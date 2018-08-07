@@ -35,6 +35,7 @@ WHITE='\033[01;37m'
 
 alias resource="source ~/.bash_profile"
 alias reload="source ~/.bash_profile"
+alias rel="source ~/.bash_profile"
 alias ngrok=~/ngrok
 alias py=python
 alias gc="git commit -m"
@@ -53,6 +54,12 @@ alias repos="cd ~/documents/repos"
 alias k="clear"
 
 # FUNCTIONS
+
+# SSH TUNNELING STUFF / BASTION
+
+function publicdb (){
+  ssh -N -L 5430:sapi.rds.spokenlayer.local:5432 ec2-user@bastion."$1".spokenlayer.net
+}
 
 function lzip(){
   zip -FSr lambda.zip *
@@ -110,6 +117,20 @@ function gdep {
     printf "$LRED\nYOU MUST INCLUDE A TAG\n$RESTORE"
   fi
 }
+
+function awslog {
+  if [ $1 == "google"]; then
+    awslogs get /aws/lambda/google-branded-fulfillments --watch  --profile "$2"
+  fi
+
+  if [ $1 == "alexa"]; then 
+    awslogs get /aws/lambda/alexa-branded-fulfillments --watch  --profile "$2"
+  fi
+}
+
+#function awslog {
+#  awslogs get "$1" --start='1w' --profile "$3" > 975594053408_aws_lambda_google-branded-fulfillments.log
+#}
 
 # START SESSION/PROMPT
 
