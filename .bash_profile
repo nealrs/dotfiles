@@ -29,6 +29,7 @@ alias gd="git diff"
 alias ga="git add"
 alias gaa="git add ."
 alias gr="git rm"
+alias gb="git checkout -b"
 alias ..="cd .."
 alias ~="cd ~"
 alias gactions=~/gactions
