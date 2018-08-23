@@ -9,17 +9,24 @@ source ~/.bash_git
 #  . ~/.bashrc
 #fi
 
+# terminal colors for LS, etc.
+export CLICOLOR=1
+#export LSCOLORS=ExFxCxDxBxegedabagacad
+export LSCOLORS=gxBxhxDxfxhxhxhxhxcxcx
+
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # ALIASES
-
+alias l="ls -pa"
+alias ls="ls -pa"
 alias resource="source ~/.bash_profile"
 alias reload="source ~/.bash_profile"
 alias rel="source ~/.bash_profile"
 alias ngrok=~/ngrok
 alias py=python
+alias gl="git log"
 alias gc="git commit -m"
 alias gca="git commit -am"
 alias gs="git status"
@@ -30,6 +37,7 @@ alias ga="git add"
 alias gaa="git add ."
 alias gr="git rm"
 alias gb="git checkout -b"
+alias gbm="git checkout master"
 alias ..="cd .."
 alias ~="cd ~"
 alias gactions=~/gactions
@@ -41,6 +49,8 @@ alias invoke="~/documents/repos/smart-speaker-fulfillments/alexa/invocation-test
 alias smongo="mongod --dbpath data/db"
 alias smongod="mongod --dbpath data/db --fork --logpath data/log/mongod.log"
 alias mongol="mongo --host 127.0.0.1:27017"
+alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+alias pubkey="cat ~/.ssh/id_rsa.pub"
 
 # AWS MOCKING STUFF
 
@@ -148,6 +158,17 @@ function awslog {
     awslogs get /aws/lambda/alexa-branded-fulfillments --watch  --profile "$2"
   fi
 }
+
+# Alexa skill management server / docker
+
+alias asmbuild="docker build -t asms ."
+alias asmrun="docker run --name asms -it --rm \
+  -p 80:5000 \
+  -v /Users/nealrs/.aws:/.aws \
+  -v /Users/nealrs/.ask:/.ask \
+  -v /Users/nealrs/.bst:/.bst \
+  --env-file ./.env \
+  asms"
 
 # COLORS
 
