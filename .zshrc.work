@@ -67,6 +67,7 @@ alias updatemotivation="curl -fsSo ~/.motivation.md https://raw.githubuserconten
 alias copy="pbcopy"
 alias paste="pbpaste"
 alias o="open ."
+alias npm="pnpm"
 
 # ============================================================
 # ALIASES — macOS
