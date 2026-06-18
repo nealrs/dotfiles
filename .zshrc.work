@@ -124,39 +124,6 @@ alias nealrs="ssh nealrs@192.168.4.50"
 alias repos="cd ~/Documents/repos"
 
 # ============================================================
-# FUNCTIONS — ascii art (call any by name; hi() uses the banner below)
-# ============================================================
-function avatar(){
-  echo "\e[32m                                     ***                  \e[0m";
-  echo "\e[32m                         ************* ***                \e[0m";
-  echo "\e[32m                     *****               **               \e[0m";
-  echo "\e[32m                 *****                    *               \e[0m";
-  echo "\e[32m               ***                        *               \e[0m";
-  echo "\e[32m             ***                          *               \e[0m";
-  echo "\e[32m            **                            *               \e[0m";
-  echo "\e[32m            *                          ***                \e[0m";
-  echo "\e[32m            *                          **                 \e[0m";
-  echo "\e[32m            *        ************ ****** **               \e[0m";
-  echo "\e[32m             *       * **        ****      **              \e[0m";
-  echo "\e[32m             **    **   *        *  **      *              \e[0m";
-  echo "\e[32m              ** ***    **     ***   **     *              \e[0m";
-  echo "\e[32m              ****       *******      *******              \e[0m";
-  echo "\e[32m              *                           *                \e[0m";
-  echo "\e[32m              *                           *                \e[0m";
-  echo "\e[32m              *                           **               \e[0m";
-  echo "\e[32m               *                           *               \e[0m";
-  echo "\e[32m                ***                        *               \e[0m";
-  echo "\e[32m                  *                        *               \e[0m";
-  echo "\e[32m                  *                       **               \e[0m";
-  echo "\e[32m                  *                      **                \e[0m";
-  echo "\e[32m                  *                   ****                 \e[0m";
-  echo "\e[32m             ******                   **                   \e[0m";
-  echo "\e[32m          ****                         *********           \e[0m";
-  echo "\e[32m       ****                                    ******      \e[0m";
-  echo "\e[32m    ****                                            ****   \e[0m";
-}
-
-# ============================================================
 # FUNCTIONS — network
 # ============================================================
 function wan(){
