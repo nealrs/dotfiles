@@ -106,10 +106,15 @@ alias gl="git log --oneline --graph --decorate --all"
 alias gd="git diff"
 
 # ============================================================
-# ALIASES — python
+# ALIASES — python (uv)
 # ============================================================
-alias py="python3"
-alias pip="python3 -m pip"
+alias py="uv run python"
+alias pip="uv pip"
+alias uvr="uv run"
+alias uva="uv add"
+alias uvs="uv sync"
+alias uvi="uv init"
+alias uvpy="uv python"
 
 # ============================================================
 # ALIASES — ssh / places
