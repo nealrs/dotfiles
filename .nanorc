@@ -1,0 +1,15 @@
+# ~/.nanorc
+# Extended syntax highlighting: https://github.com/scopatz/nanorc
+
+set autoindent
+set linenumbers
+set tabsize 2
+set tabstospaces
+set softwrap
+set mouse
+
+# Syntax highlighting — silent if path doesn't exist on this platform
+include "/usr/share/nano/*.nanorc"
+include "/usr/share/nano/extra/*.nanorc"
+include "/opt/homebrew/share/nano/*.nanorc"
+include "/home/linuxbrew/.linuxbrew/share/nano/*.nanorc"

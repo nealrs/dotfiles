@@ -48,6 +48,7 @@ PACKAGES=(
   git
   gh
   ruby
+  nano
   uv
   eza
   bat
@@ -268,6 +269,7 @@ fi
 
 symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
 symlink_dotfile "$DOTFILES/.motivation.md" ~/.motivation.md
+symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
 
 if [[ -L ~/.p10k.zsh ]]; then
   ok ".p10k.zsh symlink exists"

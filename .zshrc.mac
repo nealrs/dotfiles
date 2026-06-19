@@ -22,8 +22,8 @@ export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 
 REPOS="$HOME/repos"
 [[ ! -d "$REPOS" && -d "$HOME/Documents/repos" ]] && REPOS="$HOME/Documents/repos"
-export VISUAL="pico"
-export EDITOR="pico"
+export VISUAL="nano"
+export EDITOR="nano"
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519 2>/dev/null
 ssh-add --apple-use-keychain ~/.ssh/id_rsa 2>/dev/null
 

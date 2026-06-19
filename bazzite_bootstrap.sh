@@ -247,6 +247,7 @@ fi
 
 symlink_dotfile "$DOTFILES/.zshrc.bazzite" ~/.zshrc
 symlink_dotfile "$DOTFILES/.motivation.md" ~/.motivation.md
+symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
 
 mkdir -p ~/.config
 symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
