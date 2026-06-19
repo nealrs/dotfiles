@@ -1,5 +1,5 @@
 #!/bin/bash
-# bootstrap.sh — sets up a new Mac with everything needed for .zshrc
+# bazzite_bootstrap.sh — sets up a new Bazzite/Linux box with everything needed for .zshrc.bazzite
 # https://github.com/nealrs/dotfiles
 
 read -p "Email address (for SSH key): " EMAIL
@@ -14,30 +14,17 @@ info()    { echo -e "${YELLOW}→${NC}  $1"; }
 section() { echo -e "\n${CYAN}== $1 ==${NC}"; }
 
 # ============================================================
-# XCODE CLI TOOLS
+# HOMEBREW (Linuxbrew)
 # ============================================================
-section "Xcode CLI Tools"
-if xcode-select -p &>/dev/null; then
-  ok "already installed"
-else
-  info "Installing Xcode CLI Tools (follow the prompt)..."
-  xcode-select --install
-  until xcode-select -p &>/dev/null; do sleep 5; done
-  ok "installed"
-fi
-
-# ============================================================
-# HOMEBREW
-# ============================================================
-section "Homebrew"
+section "Homebrew (Linuxbrew)"
 if command -v brew &>/dev/null; then
   ok "already installed"
 else
-  info "Installing Homebrew..."
+  info "Installing Linuxbrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ok "installed"
 fi
-eval "$(/opt/homebrew/bin/brew shellenv)"
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # ============================================================
 # BREW PACKAGES
@@ -45,16 +32,15 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 section "Brew packages"
 
 PACKAGES=(
-  git
-  gh
-  ruby
-  uv
+  zsh
+  starship
+  atuin
+  zoxide
   eza
+  fzf
   direnv
   zsh-autosuggestions
   zsh-syntax-highlighting
-  fzf
-  powerlevel10k
 )
 
 for pkg in "${PACKAGES[@]}"; do
@@ -66,7 +52,36 @@ for pkg in "${PACKAGES[@]}"; do
   fi
 done
 
-# uv-managed Python (avoids relying on system Python)
+# ============================================================
+# ZSH AS DEFAULT SHELL
+# ============================================================
+section "Default shell"
+ZSH_PATH="$(brew --prefix)/bin/zsh"
+if [[ "$SHELL" == "$ZSH_PATH" ]]; then
+  ok "zsh already default ($ZSH_PATH)"
+else
+  if ! grep -qF "$ZSH_PATH" /etc/shells; then
+    info "Adding $ZSH_PATH to /etc/shells..."
+    echo "$ZSH_PATH" | sudo tee -a /etc/shells
+  fi
+  info "Setting default shell to $ZSH_PATH..."
+  chsh -s "$ZSH_PATH"
+  ok "default shell set — takes effect on next login"
+fi
+
+# ============================================================
+# UV (Python toolchain)
+# ============================================================
+section "uv"
+if command -v uv &>/dev/null; then
+  ok "already installed ($(uv --version))"
+else
+  info "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+  ok "uv installed"
+fi
+
 if uv python list 2>/dev/null | grep -q "3.13"; then
   ok "Python 3.13 already installed via uv"
 else
@@ -74,41 +89,20 @@ else
   uv python install 3.13 && ok "Python 3.13 installed"
 fi
 
-# fzf key bindings (Ctrl+R / Ctrl+T / Alt+C)
-if [[ ! -f ~/.fzf.zsh ]]; then
-  info "Configuring fzf key bindings..."
-  "$(brew --prefix)/opt/fzf/install" --all --no-bash --no-fish --no-update-rc
-  ok "fzf key bindings written to ~/.fzf.zsh"
-else
-  ok "fzf key bindings (~/.fzf.zsh)"
-fi
-
-# ============================================================
-# DOCKER DESKTOP
-# ============================================================
-section "Docker Desktop"
-if command -v docker &>/dev/null; then
-  ok "already installed"
-else
-  info "Installing Docker Desktop..."
-  brew install --cask docker
-  ok "installed — launch Docker.app once to complete setup"
-fi
-
 # ============================================================
 # NVM
 # ============================================================
 section "NVM"
-if [[ -d "$HOME/.nvm" ]]; then
-  ok "already installed"
+export NVM_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/nvm"
+if [[ -d "$NVM_DIR" ]]; then
+  ok "already installed ($NVM_DIR)"
 else
-  info "Installing NVM (latest)..."
+  info "Installing NVM (latest) to $NVM_DIR..."
   LATEST_NVM=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
   curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM}/install.sh" | bash
   ok "installed ($LATEST_NVM)"
 fi
 
-export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
 # ============================================================
@@ -128,7 +122,7 @@ fi
 if command -v pnpm &>/dev/null; then
   ok "pnpm already installed"
 else
-  info "Installing pnpm via nvm-managed npm..."
+  info "Installing pnpm..."
   npm install -g pnpm
   ok "pnpm installed"
 fi
@@ -150,17 +144,6 @@ else
     echo ""
     cat ~/.ssh/id_ed25519.pub
     echo ""
-  fi
-fi
-
-if [[ -f ~/.ssh/id_rsa ]]; then
-  ok "RSA key exists"
-else
-  info "No RSA key found (optional, skip if you only use ED25519)."
-  read -p "   Generate one now? (y/n) " -n 1 -r; echo
-  if [[ $REPLY =~ ^[Yy]$ ]]; then
-    ssh-keygen -t rsa -b 4096 -C "$EMAIL"
-    ok "Generated ~/.ssh/id_rsa"
   fi
 fi
 
@@ -211,28 +194,21 @@ else
   ok "cloned to $DOTFILES"
 fi
 
-symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
+symlink_dotfile "$DOTFILES/.zshrc.bazzite" ~/.zshrc
 symlink_dotfile "$DOTFILES/.motivation.md" ~/.motivation.md
 
-if [[ -L ~/.p10k.zsh ]]; then
-  ok ".p10k.zsh symlink exists"
-elif [[ -f "$DOTFILES/.p10k.zsh" ]]; then
-  ln -sf "$DOTFILES/.p10k.zsh" ~/.p10k.zsh
-  ok ".p10k.zsh → dotfiles"
-else
-  info ".p10k.zsh not in repo yet — run 'p10k configure' then commit $DOTFILES/.p10k.zsh"
-fi
+mkdir -p ~/.config
+symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
 
 # ============================================================
 # DONE
 # ============================================================
 echo -e "\n${GREEN}Bootstrap complete.${NC}\n"
 echo "  Next steps:"
-echo "  1. Launch Docker Desktop to finish its setup"
+echo "  1. Log out and back in (or exec \$ZSH_PATH) to switch to zsh"
 echo "  2. source ~/.zshrc"
-echo "  3. p10k configure   (first time only — config saves to dotfiles repo)"
 if [[ -f ~/.ssh/id_ed25519 ]]; then
-  echo "  4. Add your SSH key to GitHub:"
+  echo "  3. Add your SSH key to GitHub:"
   echo "     https://github.com/settings/ssh/new"
 fi
 echo ""
