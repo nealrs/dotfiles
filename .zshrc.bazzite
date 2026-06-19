@@ -60,9 +60,12 @@ setopt SHARE_HISTORY
 # ============================================================
 # PROMPT — starship (fallback to vcs prompt if not installed)
 # ============================================================
-zmodload zsh/mathfunc 2>/dev/null
+zmodload zsh/datetime 2>/dev/null
 if command -v starship &>/dev/null; then
   eval "$(starship init zsh)"
+  __starship_get_time() {
+    (( STARSHIP_CAPTURED_TIME = EPOCHREALTIME * 1000 ))
+  }
 else
   autoload -Uz vcs_info
   precmd() { vcs_info }
