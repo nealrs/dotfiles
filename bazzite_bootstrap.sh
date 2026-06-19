@@ -14,6 +14,37 @@ info()    { echo -e "${YELLOW}→${NC}  $1"; }
 section() { echo -e "\n${CYAN}== $1 ==${NC}"; }
 
 # ============================================================
+# RPM-OSTREE (system packages — requires reboot after)
+# ============================================================
+section "System packages (rpm-ostree)"
+
+# 1Password — official RPM repo
+if rpm -q 1password &>/dev/null; then
+  ok "1password"
+else
+  info "Setting up 1Password repo..."
+  sudo rpm --import https://downloads.1password.com/linux/keys/1password.asc
+  sudo tee /etc/yum.repos.d/1password.repo > /dev/null <<'EOF'
+[1password]
+name=1Password Stable Channel
+baseurl=https://downloads.1password.com/linux/rpm/stable/x86_64
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://downloads.1password.com/linux/keys/1password.asc
+EOF
+  sudo rpm-ostree install 1password && ok "1password — reboot required" || info "1password failed"
+fi
+
+# Deskflow — no yum repo; install manually from GitHub releases
+if rpm -q deskflow &>/dev/null; then
+  ok "deskflow"
+else
+  info "Deskflow: download the RPM from https://github.com/deskflow/deskflow/releases"
+  info "  then run: sudo rpm-ostree install <path>.rpm && systemctl reboot"
+fi
+
+# ============================================================
 # HOMEBREW (Linuxbrew)
 # ============================================================
 section "Homebrew (Linuxbrew)"
@@ -68,6 +99,26 @@ else
   chsh -s "$ZSH_PATH"
   ok "default shell set — takes effect on next login"
 fi
+
+# ============================================================
+# FLATPAK APPS
+# ============================================================
+section "Flatpak apps"
+
+flatpak_install() {
+  local id="$1" name="$2"
+  if flatpak list --columns=application 2>/dev/null | grep -qF "$id"; then
+    ok "$name"
+  else
+    info "Installing $name..."
+    flatpak install -y flathub "$id" 2>/dev/null && ok "$name" || \
+      info "$name failed — ensure Flathub is enabled: flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo"
+  fi
+}
+
+flatpak_install com.slack.Slack "Slack"
+flatpak_install org.localsend.localsend_app "LocalSend"
+# flatpak_install us.zoom.Zoom "Zoom"
 
 # ============================================================
 # UV (Python toolchain)
@@ -205,10 +256,11 @@ symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
 # ============================================================
 echo -e "\n${GREEN}Bootstrap complete.${NC}\n"
 echo "  Next steps:"
-echo "  1. Log out and back in (or exec \$ZSH_PATH) to switch to zsh"
-echo "  2. source ~/.zshrc"
+echo "  1. systemctl reboot  (if rpm-ostree installed anything new)"
+echo "  2. Log out and back in (or exec \$ZSH_PATH) to switch to zsh"
+echo "  3. source ~/.zshrc"
 if [[ -f ~/.ssh/id_ed25519 ]]; then
-  echo "  3. Add your SSH key to GitHub:"
+  echo "  4. Add your SSH key to GitHub:"
   echo "     https://github.com/settings/ssh/new"
 fi
 echo ""

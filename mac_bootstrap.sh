@@ -84,16 +84,68 @@ else
 fi
 
 # ============================================================
-# DOCKER DESKTOP
+# TAPS
 # ============================================================
-section "Docker Desktop"
-if command -v docker &>/dev/null; then
-  ok "already installed"
+section "Homebrew taps"
+brew tap deskflow/tap 2>/dev/null && ok "deskflow/tap"
+
+# ============================================================
+# APPLICATIONS (CASKS)
+# ============================================================
+section "Applications"
+
+CASKS=(
+  docker
+  betterdisplay
+  home-assistant
+  deskflow
+  1password
+  slack
+  ghostty
+  firefox
+  tableplus
+  cleanshot
+  devutils
+  localsend
+  music-decoy
+  netnewswire
+  steermouse
+  sonos
+  zoom
+)
+
+for cask in "${CASKS[@]}"; do
+  if brew list --cask "$cask" &>/dev/null 2>&1; then
+    ok "$cask"
+  else
+    info "Installing $cask..."
+    brew install --cask "$cask" && ok "$cask"
+  fi
+done
+
+# ============================================================
+# MAC APP STORE
+# ============================================================
+section "Mac App Store"
+
+if ! brew list mas &>/dev/null; then
+  info "Installing mas..."
+  brew install mas && ok "mas"
 else
-  info "Installing Docker Desktop..."
-  brew install --cask docker
-  ok "installed — launch Docker.app once to complete setup"
+  ok "mas"
 fi
+
+mas_install() {
+  local id="$1" name="$2"
+  if mas list 2>/dev/null | grep -q "^${id} "; then
+    ok "$name"
+  else
+    info "Installing $name (MAS ${id})..."
+    mas install "$id" && ok "$name" || info "$name — sign into App Store first if this fails"
+  fi
+}
+
+mas_install 441258766 "Magnet"
 
 # ============================================================
 # NVM
