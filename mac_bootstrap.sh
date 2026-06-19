@@ -50,6 +50,9 @@ PACKAGES=(
   ruby
   uv
   eza
+  bat
+  fd
+  ripgrep
   direnv
   zsh-autosuggestions
   zsh-syntax-highlighting

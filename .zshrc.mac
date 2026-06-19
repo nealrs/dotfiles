@@ -68,10 +68,21 @@ alias reload="source ~/.zshrc"
 alias rel="source ~/.zshrc"
 alias resource="source ~/.zshrc"
 alias updatedotfiles="git -C $REPOS/dotfiles pull"
+alias dot="cd $REPOS/dotfiles"
+alias path='echo $PATH | tr ":" "\n"'
+alias json="python3 -m json.tool"
+alias psg="ps aux | grep"
 alias copy="pbcopy"
 alias paste="pbpaste"
 alias o="open ."
 alias npm="pnpm"
+
+# ============================================================
+# ALIASES — tools (bat / fd / ripgrep)
+# ============================================================
+command -v bat &>/dev/null && alias cat="bat"
+command -v fd &>/dev/null && alias find="fd"
+command -v rg &>/dev/null && alias grep="rg"
 
 # ============================================================
 # ALIASES — macOS
@@ -97,6 +108,7 @@ alias dockupbuild="docker compose up --detach --build"
 alias dockdown="docker compose down"
 alias docklog="docker compose logs -f"
 alias dockps="docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+alias dockexec="docker exec -it"
 
 # ============================================================
 # ALIASES — git
@@ -104,11 +116,16 @@ alias dockps="docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
 alias gs="git status"
 alias ga="git add -A"
 alias gc="git commit -m"
+alias gcl="git clone"
 alias gp="git push"
 alias gpl="git pull"
 alias gb="git checkout -b"
+alias gco="git checkout"
 alias gl="git log --oneline --graph --decorate --all"
 alias gd="git diff"
+alias gst="git stash"
+alias gsp="git stash pop"
+alias gundo="git reset HEAD~1 --soft"
 
 # ============================================================
 # ALIASES — python (uv)
