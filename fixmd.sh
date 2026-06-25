@@ -169,8 +169,8 @@ extract_date() {
   # ── 5. Named month — prose in H1 headings ──────────────────────────────────
   # "June 5, 2026" / "Jun 5th 2026" / "June 5 2026"
   local MONTHS='(Jan(uary)?|Feb(ruary)?|Mar(ch)?|Apr(il)?|May|Jun(e)?|Jul(y)?|Aug(ust)?|Sep(tember)?|Oct(ober)?|Nov(ember)?|Dec(ember)?)'
-  if echo "$s" | grep -iqE "${MONTHS}[,. ]+([0-9]{1,2})(st|nd|rd|th)?[,. ]+20[0-9]{2}"; then
-    raw=$(echo "$s" | grep -oiE "${MONTHS}[,. ]+([0-9]{1,2})(st|nd|rd|th)?[,. ]+20[0-9]{2}" | head -1)
+  if echo "$s" | grep -iqE "${MONTHS}[,. _]+([0-9]{1,2})(st|nd|rd|th)?[,. _]+20[0-9]{2}"; then
+    raw=$(echo "$s" | grep -oiE "${MONTHS}[,. _]+([0-9]{1,2})(st|nd|rd|th)?[,. _]+20[0-9]{2}" | head -1)
     local mname dy yr mn
     mname=$(echo "$raw" | grep -oiE '^[A-Za-z]+')
     dy=$(echo "$raw"    | grep -oE '[0-9]{1,2}' | head -1)
@@ -183,12 +183,12 @@ extract_date() {
   fi
 
   # "5 June 2026" / "5th June, 2026"
-  if echo "$s" | grep -iqE "([0-9]{1,2})(st|nd|rd|th)?[,. ]+${MONTHS}[,. ]+20[0-9]{2}"; then
-    raw=$(echo "$s" | grep -oiE "([0-9]{1,2})(st|nd|rd|th)?[,. ]+${MONTHS}[,. ]+20[0-9]{2}" | head -1)
+  if echo "$s" | grep -iqE "([0-9]{1,2})(st|nd|rd|th)?[,. _]+${MONTHS}[,. _]+20[0-9]{2}"; then
+    raw=$(echo "$s" | grep -oiE "([0-9]{1,2})(st|nd|rd|th)?[,. _]+${MONTHS}[,. _]+20[0-9]{2}" | head -1)
     local mname dy yr mn
     dy=$(echo "$raw"    | grep -oE '^[0-9]+')
     # Skip leading digits+ordinal, then grab first alpha word of 3+ chars (the month name)
-    mname=$(echo "$raw" | sed 's/^[0-9]*\(st\|nd\|rd\|th\)*[,. ]*//' | grep -oiE '^[A-Za-z]{3,}')
+    mname=$(echo "$raw" | sed 's/^[0-9]*\(st\|nd\|rd\|th\)*[,. _]*//' | grep -oiE '^[A-Za-z]{3,}')
     yr=$(echo "$raw"    | grep -oE '20[0-9]{2}')
     mn=$(_month_num "$mname")
     if [ -n "$mn" ] && _valid_date "$yr" "$mn" "$dy"; then
@@ -198,8 +198,8 @@ extract_date() {
   fi
 
   # ── 6. Named month + 2-digit year: "May 13 25" / "May 13, 25" ──────────────
-  if echo "$s" | grep -iqE "${MONTHS}[,. ]+([0-9]{1,2})(st|nd|rd|th)?[,. ]+[0-9]{2}([^0-9]|$)"; then
-    raw=$(echo "$s" | grep -oiE "${MONTHS}[,. ]+([0-9]{1,2})(st|nd|rd|th)?[,. ]+[0-9]{2}" | head -1)
+  if echo "$s" | grep -iqE "${MONTHS}[,. _]+([0-9]{1,2})(st|nd|rd|th)?[,. _]+[0-9]{2}([^0-9]|$)"; then
+    raw=$(echo "$s" | grep -oiE "${MONTHS}[,. _]+([0-9]{1,2})(st|nd|rd|th)?[,. _]+[0-9]{2}" | head -1)
     local mname dy yr mn
     mname=$(echo "$raw" | grep -oiE '^[A-Za-z]+')
     dy=$(echo "$raw"    | grep -oE '[0-9]{1,2}' | head -1)
@@ -227,11 +227,11 @@ strip_date() {
   # ?[-_/. ]?[-_/. ]YY (2-digit year last, space sep ok)
   s=$(echo "$s" | sed 's/[0-9]\{1,2\}[-_\/. ][0-9]\{1,2\}[-_\/. ][0-9]\{2\}[-_\/. ]*//g')
   # Named month, month-first, 4-digit year: "June 5, 2026" / "Jun 5th 2026"
-  s=$(echo "$s" | sed 's/[A-Za-z]\{3,9\}[,. ]*[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. ]*20[0-9][0-9][,. ]*//g')
+  s=$(echo "$s" | sed 's/[A-Za-z]\{3,9\}[,. _]*[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. _]*20[0-9][0-9][,. _]*//g')
   # Named month, day-first, 4-digit year: "5th June 2026"
-  s=$(echo "$s" | sed 's/[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. ]*[A-Za-z]\{3,9\}[,. ]*20[0-9][0-9][,. ]*//g')
+  s=$(echo "$s" | sed 's/[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. _]*[A-Za-z]\{3,9\}[,. _]*20[0-9][0-9][,. _]*//g')
   # Named month, month-first, 2-digit year: "May 13 25"
-  s=$(echo "$s" | sed 's/[A-Za-z]\{3,9\}[,. ]*[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. ]*[0-9]\{2\}[,. ]*//g')
+  s=$(echo "$s" | sed 's/[A-Za-z]\{3,9\}[,. _]*[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. _]*[0-9]\{2\}[,. _]*//g')
   # Lowercase and clean up
   echo "$s" | tr '[:upper:]' '[:lower:]'
 }
