@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# fixmd.sh — normalize markdown filenames to YYYY-MM-DD-kebab-case.md
+# fixmd — normalize markdown and PDF filenames to YYYY-MM-DD-kebab-case.{md,pdf}
 #
-# Usage (after aliasing):
+# Markdown: date from filename, falls back to first H1 line
+# PDF:      date from filename only; skipped if no date found
+#
+# Usage:
 #   fixmd              # current dir, non-recursive
 #   fixmd -r           # current dir, recursive
 #   fixmd -n           # dry-run
 #   fixmd -r -n        # recursive dry-run
 #   fixmd -h           # help
-#
-# Install:
-#   Put this file anywhere in your dotfiles, e.g. ~/dotfiles/bin/fixmd.sh
-#   Add to .zshrc:  alias fixmd='bash ~/dotfiles/bin/fixmd.sh'
 
 set -euo pipefail
 
@@ -23,27 +22,31 @@ else
 fi
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-DRY_RUN=false
+DRY_RUN=true
 RECURSIVE=false
+YES=false
+EXPLICIT_N=false
 TARGET_DIR="$(pwd)"
 
 # ── Args ──────────────────────────────────────────────────────────────────────
 usage() {
-  echo -e "${BOLD}fixmd${NC} — normalize markdown filenames to YYYY-MM-DD-kebab-case.md"
+  echo -e "${BOLD}rn${NC} — normalize markdown and PDF filenames to YYYY-MM-DD-kebab-case"
   echo ""
-  echo "Usage: fixmd [-r] [-n] [-h] [directory]"
+  echo "Usage: rn [-r] [-y] [-n] [-h] [directory]"
   echo ""
   echo "  -r    Recurse into subdirectories"
-  echo "  -n    Dry run — print changes without applying them"
+  echo "  -y    Apply without confirmation prompt"
+  echo "  -n    Dry run only — print changes, no prompt"
   echo "  -h    Show this help"
   echo "  dir   Target directory (default: current directory)"
   exit 0
 }
 
-while getopts ":rnh" opt; do
+while getopts ":rynh" opt; do
   case $opt in
     r) RECURSIVE=true ;;
-    n) DRY_RUN=true ;;
+    y) YES=true ;;
+    n) DRY_RUN=true; EXPLICIT_N=true ;;    # preview only, no prompt
     h) usage ;;
     \?) echo -e "${RED}Unknown flag: -${OPTARG}${NC}" >&2; exit 1 ;;
   esac
@@ -72,7 +75,7 @@ slugify() {
 }
 
 # _pad: zero-pad a number to 2 digits
-_pad() { printf '%02d' "$1"; }
+_pad() { printf '%02d' "$((10#$1))"; }
 
 # _valid_date: sanity-check extracted values (month 1-12, day 1-31)
 _valid_date() {
@@ -103,7 +106,7 @@ _month_num() {
 extract_date() {
   local s="$1"
   EXTRACTED_YEAR=""; EXTRACTED_MONTH=""; EXTRACTED_DAY=""
-  local SEP='[-_/.]'
+  local SEP='[-_/. ]'            # includes space: "05 14 2025"
   local Y='(20[0-9]{2})'
   local YY='([0-9]{2})'         # 2-digit year, will be expanded to 20YY
   local N='([0-9]{1,2})'
@@ -194,6 +197,20 @@ extract_date() {
     fi
   fi
 
+  # ── 6. Named month + 2-digit year: "May 13 25" / "May 13, 25" ──────────────
+  if echo "$s" | grep -iqE "${MONTHS}[,. ]+([0-9]{1,2})(st|nd|rd|th)?[,. ]+[0-9]{2}([^0-9]|$)"; then
+    raw=$(echo "$s" | grep -oiE "${MONTHS}[,. ]+([0-9]{1,2})(st|nd|rd|th)?[,. ]+[0-9]{2}" | head -1)
+    local mname dy yr mn
+    mname=$(echo "$raw" | grep -oiE '^[A-Za-z]+')
+    dy=$(echo "$raw"    | grep -oE '[0-9]{1,2}' | head -1)
+    yr="20$(echo "$raw" | grep -oE '[0-9]{2}$')"
+    mn=$(_month_num "$mname")
+    if [ -n "$mn" ] && _valid_date "$yr" "$mn" "$dy"; then
+      EXTRACTED_YEAR="$yr"; EXTRACTED_MONTH=$(_pad "$mn"); EXTRACTED_DAY=$(_pad "$dy")
+      return 0
+    fi
+  fi
+
   return 1
 }
 
@@ -201,18 +218,20 @@ extract_date() {
 # Handles all separator types, padded and unpadded, named months.
 strip_date() {
   local s="$1"
-  # YYYY[-_/.]?[-_/.]? (year first, unpadded ok)
-  s=$(echo "$s" | sed 's/20[0-9][0-9][-_\/.][0-9]\{1,2\}[-_\/.][0-9]\{1,2\}[-_\/.]*//g')
-  # ?[-_/.]?[-_/.]YYYY (year last, unpadded ok)
-  s=$(echo "$s" | sed 's/[0-9]\{1,2\}[-_\/.][0-9]\{1,2\}[-_\/.]20[0-9][0-9][-_\/.]*//g')
-  # YY[-_/.]?[-_/.] (2-digit year first)
-  s=$(echo "$s" | sed 's/[0-9]\{2\}[-_\/.][0-9]\{1,2\}[-_\/.][0-9]\{1,2\}[-_\/.]*//g')
-  # ?[-_/.]?[-_/.]YY (2-digit year last)
-  s=$(echo "$s" | sed 's/[0-9]\{1,2\}[-_\/.][0-9]\{1,2\}[-_\/.][0-9]\{2\}[-_\/.]*//g')
-  # Named month, month-first: "June 5, 2026" / "Jun 5th 2026"
+  # YYYY[-_/. ]?[-_/. ]? (year first, unpadded ok, space sep ok)
+  s=$(echo "$s" | sed 's/20[0-9][0-9][-_\/. ][0-9]\{1,2\}[-_\/. ][0-9]\{1,2\}[-_\/. ]*//g')
+  # ?[-_/. ]?[-_/. ]YYYY (year last, unpadded ok, space sep ok)
+  s=$(echo "$s" | sed 's/[0-9]\{1,2\}[-_\/. ][0-9]\{1,2\}[-_\/. ]20[0-9][0-9][-_\/. ]*//g')
+  # YY[-_/. ]?[-_/. ] (2-digit year first, space sep ok)
+  s=$(echo "$s" | sed 's/[0-9]\{2\}[-_\/. ][0-9]\{1,2\}[-_\/. ][0-9]\{1,2\}[-_\/. ]*//g')
+  # ?[-_/. ]?[-_/. ]YY (2-digit year last, space sep ok)
+  s=$(echo "$s" | sed 's/[0-9]\{1,2\}[-_\/. ][0-9]\{1,2\}[-_\/. ][0-9]\{2\}[-_\/. ]*//g')
+  # Named month, month-first, 4-digit year: "June 5, 2026" / "Jun 5th 2026"
   s=$(echo "$s" | sed 's/[A-Za-z]\{3,9\}[,. ]*[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. ]*20[0-9][0-9][,. ]*//g')
-  # Named month, day-first: "5th June 2026"
+  # Named month, day-first, 4-digit year: "5th June 2026"
   s=$(echo "$s" | sed 's/[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. ]*[A-Za-z]\{3,9\}[,. ]*20[0-9][0-9][,. ]*//g')
+  # Named month, month-first, 2-digit year: "May 13 25"
+  s=$(echo "$s" | sed 's/[A-Za-z]\{3,9\}[,. ]*[0-9]\{1,2\}\(st\|nd\|rd\|th\)*[,. ]*[0-9]\{2\}[,. ]*//g')
   # Lowercase and clean up
   echo "$s" | tr '[:upper:]' '[:lower:]'
 }
@@ -318,9 +337,54 @@ process_file() {
   RENAMED=$((RENAMED + 1))
 }
 
+# ── Core file processor (PDF) ─────────────────────────────────────────────────
+# Filename-only: no H1 fallback. Skip if no date found.
+process_pdf() {
+  local filepath="$1"
+  local dir; dir=$(dirname "$filepath")
+  local base; base=$(basename "$filepath" .pdf)
+
+  local year month day slug newname newpath
+
+  if ! extract_date "$base"; then
+    echo -e "${YELLOW}SKIP${NC}    $filepath  (no date in filename)"
+    SKIPPED=$((SKIPPED + 1))
+    return
+  fi
+
+  year="$EXTRACTED_YEAR"; month="$EXTRACTED_MONTH"; day="$EXTRACTED_DAY"
+  local name_part; name_part=$(strip_date "$base")
+  slug=$(slugify "$name_part")
+
+  newname="${year}-${month}-${day}"
+  [ -n "$slug" ] && newname="${newname}-${slug}"
+  newname="${newname}.pdf"
+  newpath="${dir}/${newname}"
+
+  if [ "$(basename "$filepath")" = "$newname" ]; then
+    echo -e "${CYAN}OK${NC}      $filepath"
+    ALREADY_OK=$((ALREADY_OK + 1))
+    return
+  fi
+
+  if [ -e "$newpath" ] && [ "$filepath" != "$newpath" ]; then
+    prompt_conflict "$filepath" "$newpath"
+    if [ "$CONFLICT_CHOICE" = "skip" ]; then
+      echo -e "${RED}CONFLICT${NC} $filepath  →  $newname  (skipped)"
+      CONFLICTS=$((CONFLICTS + 1))
+      return
+    fi
+  fi
+
+  echo -e "${GREEN}RENAME${NC}  $filepath  →  $newname"
+  if [ "$DRY_RUN" = false ]; then
+    mv -- "$filepath" "$newpath"
+  fi
+  RENAMED=$((RENAMED + 1))
+}
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 echo ""
-[ "$DRY_RUN"   = true ] && echo -e "${YELLOW}DRY RUN — no files will be renamed${NC}"
 [ "$RECURSIVE" = true ] && echo -e "${CYAN}RECURSIVE${NC} mode"
 echo -e "Scanning: ${BOLD}$(cd "$TARGET_DIR" && pwd)${NC}"
 echo "────────────────────────────────────────"
@@ -328,16 +392,54 @@ echo "────────────────────────�
 FIND_DEPTH="-maxdepth 1"
 [ "$RECURSIVE" = true ] && FIND_DEPTH=""
 
+# ── Preview pass (always dry-run) ─────────────────────────────────────────────
+DRY_RUN=true
 while IFS= read -r -d '' file; do
   process_file "$file"
-done < <(find "$TARGET_DIR" $FIND_DEPTH -name "*.md" -type f -print0 | sort -z)
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.md" -type f -print0 | sort -z)
+
+while IFS= read -r -d '' file; do
+  process_pdf "$file"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.pdf" -type f -print0 | sort -z)
 
 echo "────────────────────────────────────────"
-echo -e "Renamed:    ${GREEN}${RENAMED}${NC}$([ "$DRY_RUN" = true ] && echo ' (dry run)' || true)"
-echo -e "Already OK: ${CYAN}${ALREADY_OK}${NC}"
-echo -e "Skipped:    ${YELLOW}${SKIPPED}${NC}"
-[ "$CONFLICTS" -gt 0 ] && echo -e "Conflicts:  ${RED}${CONFLICTS}${NC}"
-true
-echo -e "\n  ${CYAN}*${NC} RENAME* = date sourced from file's H1 heading"
-[ "$DRY_RUN" = true ] && echo -e "\n${YELLOW}Re-run without -n to apply.${NC}"
+echo -e "Would rename: ${GREEN}${RENAMED}${NC}  |  Already OK: ${CYAN}${ALREADY_OK}${NC}  |  Skip: ${YELLOW}${SKIPPED}${NC}$([ "$CONFLICTS" -gt 0 ] && echo "  |  Conflicts: ${RED}${CONFLICTS}${NC}" || true)"
+echo -e "  ${CYAN}*${NC} RENAME* = date from H1 heading"
+echo ""
+
+# ── Nothing to do ─────────────────────────────────────────────────────────────
+if [ "$RENAMED" -eq 0 ]; then
+  echo -e "${CYAN}Nothing to rename.${NC}"
+  echo ""
+  exit 0
+fi
+
+# ── Dry-run only (-n): stop here ──────────────────────────────────────────────
+if [ "$YES" = false ] && [ "${EXPLICIT_N:-false}" = true ]; then
+  exit 0
+fi
+
+# ── Confirm ───────────────────────────────────────────────────────────────────
+if [ "$YES" = false ]; then
+  printf "Apply these %d rename(s)? [y/N] " "$RENAMED"
+  read -r reply </dev/tty
+  [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted."; echo ""; exit 0; }
+fi
+
+# ── Apply pass ────────────────────────────────────────────────────────────────
+echo ""
+DRY_RUN=false
+RENAMED=0; SKIPPED=0; ALREADY_OK=0; CONFLICTS=0
+SKIP_ALL_CONFLICTS=false
+
+while IFS= read -r -d '' file; do
+  process_file "$file"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.md" -type f -print0 | sort -z)
+
+while IFS= read -r -d '' file; do
+  process_pdf "$file"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.pdf" -type f -print0 | sort -z)
+
+echo "────────────────────────────────────────"
+echo -e "Renamed: ${GREEN}${RENAMED}${NC}  |  Skipped: ${YELLOW}${SKIPPED}${NC}$([ "$CONFLICTS" -gt 0 ] && echo "  |  Conflicts: ${RED}${CONFLICTS}${NC}" || true)"
 echo ""
