@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# fixmd — normalize markdown and PDF filenames to YYYY-MM-DD-kebab-case.{md,pdf}
+# rename — normalize markdown, txt, and PDF filenames to YYYY-MM-DD-kebab-case.{ext}
 #
-# Markdown: date from filename, falls back to first H1 line
-# PDF:      date from filename only; skipped if no date found
+# Markdown/txt: date from filename, falls back to first heading/line with a date
+# PDF:          date from filename only; skipped if no date found
 #
 # Usage:
-#   fixmd              # current dir, non-recursive
-#   fixmd -r           # current dir, recursive
-#   fixmd -n           # dry-run
-#   fixmd -r -n        # recursive dry-run
-#   fixmd -h           # help
+#   rn              # current dir, non-recursive
+#   rn -r           # current dir, recursive
+#   rn -n           # dry-run
+#   rn -r -n        # recursive dry-run
+#   rn -h           # help
 
 set -euo pipefail
 
@@ -30,7 +30,7 @@ TARGET_DIR="$(pwd)"
 
 # ── Args ──────────────────────────────────────────────────────────────────────
 usage() {
-  echo -e "${BOLD}rn${NC} — normalize markdown and PDF filenames to YYYY-MM-DD-kebab-case"
+  echo -e "${BOLD}rn${NC} — normalize markdown, txt, and PDF filenames to YYYY-MM-DD-kebab-case"
   echo ""
   echo "Usage: rn [-r] [-y] [-n] [-h] [directory]"
   echo ""
@@ -261,11 +261,15 @@ prompt_conflict() {
   esac
 }
 
-# ── Core file processor ───────────────────────────────────────────────────────
-process_file() {
+# ── Core file processor (markdown + txt) ──────────────────────────────────────
+# $1 = filepath, $2 = extension (md or txt)
+# For md:  H1 fallback requires "# " prefix
+# For txt: H1 fallback reads first non-empty line (no prefix required)
+process_text_file() {
   local filepath="$1"
+  local ext="$2"
   local dir; dir=$(dirname "$filepath")
-  local base; base=$(basename "$filepath" .md)
+  local base; base=$(basename "$filepath" ".$ext")
 
   local year month day slug newname newpath date_source=""
 
@@ -276,26 +280,29 @@ process_file() {
     slug=$(slugify "$name_part")
     date_source="filename"
 
-  # 2. Fall back to first H1 — but only if the H1 has a *real* date value,
-  #    not a template placeholder like {{date}} or YYYY-MM-DD
+  # 2. Fall back to first heading/line with a date
   else
-    local h1
-    h1=$(grep -m1 '^# ' "$filepath" 2>/dev/null | sed 's/^# //' || true)
+    local first_line
+    if [ "$ext" = "md" ]; then
+      first_line=$(grep -m1 '^# ' "$filepath" 2>/dev/null | sed 's/^# //' || true)
+    else
+      first_line=$(grep -m1 '.' "$filepath" 2>/dev/null || true)
+    fi
     # Reject obvious placeholders
-    if echo "$h1" | grep -qiE '(\{\{|\[date\]|YYYY|MM[-_/]DD|date.*here)'; then
-      echo -e "${YELLOW}SKIP${NC}    $filepath  (template placeholder in H1)"
+    if echo "$first_line" | grep -qiE '(\{\{|\[date\]|YYYY|MM[-_/]DD|date.*here)'; then
+      echo -e "${YELLOW}SKIP${NC}    $filepath  (template placeholder in heading)"
       SKIPPED=$((SKIPPED + 1))
       return
     fi
-    if [ -n "$h1" ] && extract_date "$h1"; then
+    if [ -n "$first_line" ] && extract_date "$first_line"; then
       year="$EXTRACTED_YEAR"; month="$EXTRACTED_MONTH"; day="$EXTRACTED_DAY"
-      local h1_name; h1_name=$(strip_date "$h1")
-      if [ -n "$(echo "$h1_name" | tr -d '[:space:]-')" ]; then
-        slug=$(slugify "$h1_name")
+      local line_name; line_name=$(strip_date "$first_line")
+      if [ -n "$(echo "$line_name" | tr -d '[:space:]-')" ]; then
+        slug=$(slugify "$line_name")
       else
         slug=$(slugify "$base")
       fi
-      date_source="H1"
+      date_source="heading"
     else
       echo -e "${YELLOW}SKIP${NC}    $filepath  (no date found)"
       SKIPPED=$((SKIPPED + 1))
@@ -306,7 +313,7 @@ process_file() {
   # Build target name
   newname="${year}-${month}-${day}"
   [ -n "$slug" ] && newname="${newname}-${slug}"
-  newname="${newname}.md"
+  newname="${newname}.${ext}"
   newpath="${dir}/${newname}"
 
   # Already correct
@@ -328,7 +335,7 @@ process_file() {
   fi
 
   local label="RENAME"
-  [ "$date_source" = "H1" ] && label="RENAME*"  # * = date came from H1
+  [ "$date_source" = "heading" ] && label="RENAME*"  # * = date came from heading
   echo -e "${GREEN}${label}${NC}  $filepath  →  $newname"
 
   if [ "$DRY_RUN" = false ]; then
@@ -338,7 +345,7 @@ process_file() {
 }
 
 # ── Core file processor (PDF) ─────────────────────────────────────────────────
-# Filename-only: no H1 fallback. Skip if no date found.
+# Filename-only: no heading fallback. Skip if no date found.
 process_pdf() {
   local filepath="$1"
   local dir; dir=$(dirname "$filepath")
@@ -395,8 +402,12 @@ FIND_DEPTH="-maxdepth 1"
 # ── Preview pass (always dry-run) ─────────────────────────────────────────────
 DRY_RUN=true
 while IFS= read -r -d '' file; do
-  process_file "$file"
+  process_text_file "$file" "md"
 done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.md" -type f -print0 | sort -z)
+
+while IFS= read -r -d '' file; do
+  process_text_file "$file" "txt"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.txt" -type f -print0 | sort -z)
 
 while IFS= read -r -d '' file; do
   process_pdf "$file"
@@ -404,7 +415,7 @@ done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.pdf" -type f -print0 |
 
 echo "────────────────────────────────────────"
 echo -e "Would rename: ${GREEN}${RENAMED}${NC}  |  Already OK: ${CYAN}${ALREADY_OK}${NC}  |  Skip: ${YELLOW}${SKIPPED}${NC}$([ "$CONFLICTS" -gt 0 ] && echo "  |  Conflicts: ${RED}${CONFLICTS}${NC}" || true)"
-echo -e "  ${CYAN}*${NC} RENAME* = date from H1 heading"
+echo -e "  ${CYAN}*${NC} RENAME* = date from heading/first line"
 echo ""
 
 # ── Nothing to do ─────────────────────────────────────────────────────────────
@@ -433,8 +444,12 @@ RENAMED=0; SKIPPED=0; ALREADY_OK=0; CONFLICTS=0
 SKIP_ALL_CONFLICTS=false
 
 while IFS= read -r -d '' file; do
-  process_file "$file"
+  process_text_file "$file" "md"
 done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.md" -type f -print0 | sort -z)
+
+while IFS= read -r -d '' file; do
+  process_text_file "$file" "txt"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.txt" -type f -print0 | sort -z)
 
 while IFS= read -r -d '' file; do
   process_pdf "$file"
