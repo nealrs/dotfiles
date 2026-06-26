@@ -2,7 +2,8 @@
 # rename — normalize markdown, txt, and PDF filenames to YYYY-MM-DD-kebab-case.{ext}
 #
 # Markdown/txt: date from filename, falls back to first heading/line with a date
-# PDF:          date from filename only; skipped if no date found
+# PDF:          date from filename only; falls back to slug-only if no date found
+# All types:    if no date found anywhere, still kebab-cases the title (SLUG)
 #
 # Usage:
 #   rn              # current dir, non-recursive
@@ -304,16 +305,25 @@ process_text_file() {
       fi
       date_source="heading"
     else
-      echo -e "${YELLOW}SKIP${NC}    $filepath  (no date found)"
-      SKIPPED=$((SKIPPED + 1))
-      return
+      # No date anywhere — still kebab-case the title if it would change
+      slug=$(slugify "$base")
+      if [ -z "$slug" ]; then
+        echo -e "${YELLOW}SKIP${NC}    $filepath  (no date and no slug)"
+        SKIPPED=$((SKIPPED + 1))
+        return
+      fi
+      date_source="slug-only"
     fi
   fi
 
   # Build target name
-  newname="${year}-${month}-${day}"
-  [ -n "$slug" ] && newname="${newname}-${slug}"
-  newname="${newname}.${ext}"
+  if [ "$date_source" = "slug-only" ]; then
+    newname="${slug}.${ext}"
+  else
+    newname="${year}-${month}-${day}"
+    [ -n "$slug" ] && newname="${newname}-${slug}"
+    newname="${newname}.${ext}"
+  fi
   newpath="${dir}/${newname}"
 
   # Already correct
@@ -335,7 +345,7 @@ process_text_file() {
   fi
 
   local label="RENAME"
-  [ "$date_source" = "heading" ] && label="RENAME*"  # * = date came from heading
+  [ "$date_source" = "heading" ]   && label="RENAME*"
   echo -e "${GREEN}${label}${NC}  $filepath  →  $newname"
 
   if [ "$DRY_RUN" = false ]; then
@@ -345,27 +355,35 @@ process_text_file() {
 }
 
 # ── Core file processor (PDF) ─────────────────────────────────────────────────
-# Filename-only: no heading fallback. Skip if no date found.
 process_pdf() {
   local filepath="$1"
   local dir; dir=$(dirname "$filepath")
   local base; base=$(basename "$filepath" .pdf)
 
-  local year month day slug newname newpath
+  local year month day slug newname newpath date_source=""
 
-  if ! extract_date "$base"; then
-    echo -e "${YELLOW}SKIP${NC}    $filepath  (no date in filename)"
-    SKIPPED=$((SKIPPED + 1))
-    return
+  if extract_date "$base"; then
+    year="$EXTRACTED_YEAR"; month="$EXTRACTED_MONTH"; day="$EXTRACTED_DAY"
+    local name_part; name_part=$(strip_date "$base")
+    slug=$(slugify "$name_part")
+    date_source="filename"
+  else
+    slug=$(slugify "$base")
+    if [ -z "$slug" ]; then
+      echo -e "${YELLOW}SKIP${NC}    $filepath  (no date and no slug)"
+      SKIPPED=$((SKIPPED + 1))
+      return
+    fi
+    date_source="slug-only"
   fi
 
-  year="$EXTRACTED_YEAR"; month="$EXTRACTED_MONTH"; day="$EXTRACTED_DAY"
-  local name_part; name_part=$(strip_date "$base")
-  slug=$(slugify "$name_part")
-
-  newname="${year}-${month}-${day}"
-  [ -n "$slug" ] && newname="${newname}-${slug}"
-  newname="${newname}.pdf"
+  if [ "$date_source" = "slug-only" ]; then
+    newname="${slug}.pdf"
+  else
+    newname="${year}-${month}-${day}"
+    [ -n "$slug" ] && newname="${newname}-${slug}"
+    newname="${newname}.pdf"
+  fi
   newpath="${dir}/${newname}"
 
   if [ "$(basename "$filepath")" = "$newname" ]; then
@@ -383,7 +401,8 @@ process_pdf() {
     fi
   fi
 
-  echo -e "${GREEN}RENAME${NC}  $filepath  →  $newname"
+  local label="RENAME"
+  echo -e "${GREEN}${label}${NC}  $filepath  →  $newname"
   if [ "$DRY_RUN" = false ]; then
     mv -- "$filepath" "$newpath"
   fi
