@@ -69,7 +69,7 @@ alias reload="source ~/.zshrc"
 alias rel="source ~/.zshrc"
 alias resource="source ~/.zshrc"
 alias updatedotfiles="git -C $REPOS/dotfiles pull"
-alias dot="cd $REPOS/dotfiles"
+alias dots="cd $REPOS/dotfiles"
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
 alias psg="ps aux | grep"
@@ -223,7 +223,13 @@ function mo(){
 function hi(){
   local ascii="$REPOS/dotfiles/ascii_art.sh"
   [[ -f "$ascii" ]] || curl -fsSo "$ascii" https://raw.githubusercontent.com/nealrs/dotfiles/master/ascii_art.sh
-  [[ -f "$ascii" ]] && source "$ascii" && audicus
+  if [[ -f "$ascii" ]]; then
+    source "$ascii"
+    if [[ -f ~/.hostname ]]; then
+      local _banner="banner_$(cat ~/.hostname)"
+      typeset -f "$_banner" &>/dev/null && "$_banner"
+    fi
+  fi
 
   net
   mo

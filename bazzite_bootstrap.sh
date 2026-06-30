@@ -14,6 +14,18 @@ info()    { echo -e "${YELLOW}→${NC}  $1"; }
 section() { echo -e "\n${CYAN}== $1 ==${NC}"; }
 
 # ============================================================
+# HOST IDENTITY
+# ============================================================
+section "Host identity"
+if [[ -f ~/.hostname ]]; then
+  ok "~/.hostname already set to '$(cat ~/.hostname)'"
+else
+  read -p "   Machine name (e.g. kewtie, gibson): " HOST_NAME
+  echo "$HOST_NAME" > ~/.hostname
+  ok "~/.hostname written ('$HOST_NAME')"
+fi
+
+# ============================================================
 # RPM-OSTREE (system packages — requires reboot after)
 # ============================================================
 section "System packages (rpm-ostree)"

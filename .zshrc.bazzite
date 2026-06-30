@@ -179,7 +179,7 @@ alias ts="tailscale"
 
 alias repos="cd $REPOS"
 alias updatedotfiles="git -C $REPOS/dotfiles pull"
-alias dot="cd $REPOS/dotfiles"
+alias dots="cd $REPOS/dotfiles"
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
 alias psg="ps aux | grep"
@@ -253,8 +253,13 @@ function mo(){
 # FUNCTIONS — startup greeting
 # ============================================================
 function hi(){
-  [[ -f "$REPOS/dotfiles/ascii_art.sh" ]] && source "$REPOS/dotfiles/ascii_art.sh"
-  banner_gibson
+  if [[ -f "$REPOS/dotfiles/ascii_art.sh" ]]; then
+    source "$REPOS/dotfiles/ascii_art.sh"
+    if [[ -f ~/.hostname ]]; then
+      local _banner="banner_$(cat ~/.hostname)"
+      typeset -f "$_banner" &>/dev/null && "$_banner"
+    fi
+  fi
 
   net
   mo
