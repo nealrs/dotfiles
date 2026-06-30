@@ -10,7 +10,7 @@
 # bazzite bling: /usr/share/bazzite-cli/bling.sh (eza aliases, atuin, zoxide)
 #
 # Local files:
-#   ~/.motivation.md   — one quote per line (- item), loaded by hi()
+#   ~/.motivation.md   — one quote per line (- item), loaded by mo()
 #   ~/.ssh/id_ed25519  — SSH key, added to agent on startup
 #   ~/repos/dotfiles/ascii_art.sh — ASCII art functions (gibson, etc.)
 #   ~/repos/dotfiles/rename.sh  — script to normalize names/dates of markdown, txt, and PDF files
@@ -169,7 +169,14 @@ alias uvpy="uv python"
 # ============================================================
 # ALIASES — ssh / places
 # ============================================================
-alias nealrs="ssh nealrs@192.168.4.50"
+[[ -f "$REPOS/dotfiles/tailnet.sh" ]] && source "$REPOS/dotfiles/tailnet.sh" "$REPOS/dotfiles/.tailnet.json"
+
+# Tailscale
+alias ts-status="tailscale status"
+alias ts-up="tailscale up"
+alias ts-down="tailscale down"
+alias ts="tailscale"
+
 alias repos="cd $REPOS"
 alias updatedotfiles="git -C $REPOS/dotfiles pull"
 alias dot="cd $REPOS/dotfiles"
@@ -235,20 +242,22 @@ rn() {
   [[ -n $_script ]] && bash "$_script" "$@" || echo "rn: rename.sh not found" >&2
 }
 
+function mo(){
+  [[ -f ~/.motivation.md ]] || curl -fsSo ~/.motivation.md https://raw.githubusercontent.com/nealrs/dotfiles/master/.motivation.md
+  local things=("${(@f)$(grep '^- ' ~/.motivation.md | sed 's/^- //')}")
+  local idx=$(( RANDOM % ${#things[@]} + 1 ))
+  printf "\nBro, ${things[$idx]}.\n\n"
+}
+
 # ============================================================
 # FUNCTIONS — startup greeting
 # ============================================================
 function hi(){
   [[ -f "$REPOS/dotfiles/ascii_art.sh" ]] && source "$REPOS/dotfiles/ascii_art.sh"
-  gibson
-
-  [[ -f ~/.motivation.md ]] || curl -fsSo ~/.motivation.md https://raw.githubusercontent.com/nealrs/dotfiles/master/.motivation.md
-  THINGS=("${(@f)$(grep '^- ' ~/.motivation.md | sed 's/^- //')}")
-  RANDOM_INDEX=$(( RANDOM % ${#THINGS[@]} + 1 ))
-  THING="${THINGS[$RANDOM_INDEX]}"
+  banner_gibson
 
   net
-  printf "\nBro, $THING.\n\n"
+  mo
   weather
 }
 

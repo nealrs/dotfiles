@@ -150,6 +150,7 @@ mas_install() {
 }
 
 mas_install 441258766 "Magnet"
+mas_install 1475387142 "Tailscale"
 
 # ============================================================
 # NVM

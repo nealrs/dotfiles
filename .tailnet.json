@@ -1,0 +1,22 @@
+{
+  "hosts": [
+    {
+      "name": "kewtie",
+      "user": "nealrs",
+      "local_ip": "192.168.4.50",
+      "tailscale_hostname": "kewtie",
+      "local_alias": "kewtie",
+      "tailscale_alias": "tsk",
+      "extra_aliases": ["nealrs"]
+    },
+    {
+      "name": "gibson",
+      "user": "neal",
+      "local_ip": "192.168.4.22",
+      "tailscale_hostname": "gibson",
+      "local_alias": "gibson",
+      "tailscale_alias": "tsg",
+      "extra_aliases": []
+    }
+  ]
+}
