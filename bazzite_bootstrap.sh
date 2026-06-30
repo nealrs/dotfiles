@@ -264,6 +264,11 @@ symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
 mkdir -p ~/.config
 symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
 
+if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
+  info "Generating ~/.ssh/config from .machines.json..."
+  bash "$DOTFILES/gen_ssh_config.sh" && ok "~/.ssh/config generated"
+fi
+
 # ============================================================
 # DONE
 # ============================================================

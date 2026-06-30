@@ -178,9 +178,9 @@ alias ts-down="tailscale down"
 alias ts="tailscale"
 
 alias repos="cd $REPOS"
-alias updatedotfiles="git -C $REPOS/dotfiles pull"
-alias dots="cd $REPOS/dotfiles"
 alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
+alias updatedotfiles="git -C $REPOS/dotfiles pull && genssh"
+alias dots="cd $REPOS/dotfiles"
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
 alias psg="ps aux | grep"

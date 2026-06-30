@@ -293,6 +293,11 @@ else
   info ".p10k.zsh not in repo yet — run 'p10k configure' then commit $DOTFILES/.p10k.zsh"
 fi
 
+if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
+  info "Generating ~/.ssh/config from .machines.json..."
+  bash "$DOTFILES/gen_ssh_config.sh" && ok "~/.ssh/config generated"
+fi
+
 # ============================================================
 # DONE
 # ============================================================

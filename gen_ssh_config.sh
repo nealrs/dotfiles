@@ -27,16 +27,16 @@ for h in hosts:
     env     = h.get("ssh_set_env", {})
     env_lines = [f"    SetEnv {k}={v}" for k, v in env.items()]
 
-    lines.append(f"# {name} — tailscale")
-    lines.append(f"Host {name}")
+    lines.append(f"# {name} — tailnet")
+    lines.append(f"Host {name}-tailnet")
     lines.append(f"    HostName {ts_host}")
     lines.append(f"    User {user}")
     lines.extend(env_lines)
     lines.append("")
 
     if ip:
-        lines.append(f"# {name} — local")
-        lines.append(f"Host {ip}")
+        lines.append(f"# {name} — lan")
+        lines.append(f"Host {name}-lan")
         lines.append(f"    HostName {ip}")
         lines.append(f"    User {user}")
         lines.extend(env_lines)
