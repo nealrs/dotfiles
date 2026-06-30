@@ -169,7 +169,7 @@ alias uvpy="uv python"
 # ============================================================
 # ALIASES — ssh / places
 # ============================================================
-[[ -f "$REPOS/dotfiles/tailnet.sh" ]] && source "$REPOS/dotfiles/tailnet.sh" "$REPOS/dotfiles/.tailnet.json"
+[[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/.machines.json"
 
 # Tailscale
 alias ts-status="tailscale status"
@@ -180,6 +180,7 @@ alias ts="tailscale"
 alias repos="cd $REPOS"
 alias updatedotfiles="git -C $REPOS/dotfiles pull"
 alias dots="cd $REPOS/dotfiles"
+alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
 alias psg="ps aux | grep"

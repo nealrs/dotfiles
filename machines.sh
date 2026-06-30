@@ -1,13 +1,13 @@
 #!/usr/bin/env zsh
-# tailnet.sh — generates ssh aliases from .tailnet.json (kewtie, gibson, etc.)
+# machines.sh — generates ssh aliases from .machines.json (kewtie, gibson, etc.)
 # Source from .zshrc.mac / .zshrc.bazzite with the json path as $1:
-#   [[ -f "$REPOS/dotfiles/tailnet.sh" ]] && source "$REPOS/dotfiles/tailnet.sh" "$REPOS/dotfiles/.tailnet.json"
-# Edit .tailnet.json to add/rename hosts — never hardcode IPs in zshrc files.
+#   [[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/.machines.json"
+# Edit .machines.json to add/rename hosts — never hardcode IPs in zshrc files.
 
-_TAILNET_JSON="$1"
+_MACHINES_JSON="$1"
 
-if [[ -f "$_TAILNET_JSON" ]] && command -v python3 &>/dev/null; then
-  eval "$(python3 - "$_TAILNET_JSON" <<'PY'
+if [[ -f "$_MACHINES_JSON" ]] && command -v python3 &>/dev/null; then
+  eval "$(python3 - "$_MACHINES_JSON" <<'PY'
 import json, sys, shlex
 
 with open(sys.argv[1]) as f:
@@ -18,8 +18,8 @@ for h in hosts:
     ip    = h.get("local_ip")
     ts    = h.get("tailscale_hostname")
 
-    if h.get("local_alias") and ip:
-        print(f"alias {h['local_alias']}={shlex.quote(f'ssh {user}@{ip}')}")
+    if ip:
+        print(f"alias {h['name']}={shlex.quote(f'ssh {user}@{ip}')}")
 
     if h.get("tailscale_alias") and ts:
         print(f"alias {h['tailscale_alias']}={shlex.quote(f'ssh {user}@{ts}')}")
@@ -31,14 +31,14 @@ PY
 )"
 fi
 
-# tssh <name> — connect to any host in .tailnet.json by name via tailscale
+# tssh <name> — connect to any host in .machines.json by name via tailscale
 tssh() {
   local host="$1"
   [[ -n "$host" ]] || { echo "usage: tssh <hostname>" >&2; return 1 }
-  [[ -f "$_TAILNET_JSON" ]] || { echo "tssh: .tailnet.json not found" >&2; return 1 }
+  [[ -f "$_MACHINES_JSON" ]] || { echo "tssh: .machines.json not found" >&2; return 1 }
 
   local target
-  target="$(python3 - "$_TAILNET_JSON" "$host" <<'PY'
+  target="$(python3 - "$_MACHINES_JSON" "$host" <<'PY'
 import json, sys
 
 with open(sys.argv[1]) as f:
@@ -46,7 +46,7 @@ with open(sys.argv[1]) as f:
 
 needle = sys.argv[2]
 for h in hosts:
-    names = [h["name"], h.get("local_alias",""), h.get("tailscale_alias","")] + h.get("extra_aliases",[])
+    names = [h["name"], h.get("tailscale_alias","")] + h.get("extra_aliases",[])
     if needle in names:
         ts = h.get("tailscale_hostname", h["name"])
         print(f"{h['user']}@{ts}")
@@ -58,7 +58,7 @@ PY
   if [[ -n "$target" ]]; then
     ssh "$target"
   else
-    echo "tssh: unknown host '$host' (check .tailnet.json)" >&2
+    echo "tssh: unknown host '$host' (check .machines.json)" >&2
     return 1
   fi
 }

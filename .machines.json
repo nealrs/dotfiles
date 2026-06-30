@@ -5,18 +5,18 @@
       "user": "nealrs",
       "local_ip": "192.168.4.50",
       "tailscale_hostname": "kewtie",
-      "local_alias": "kewtie",
       "tailscale_alias": "tsk",
-      "extra_aliases": ["nealrs"]
+      "extra_aliases": [],
+      "ssh_set_env": {"TERM": "xterm-256color"}
     },
     {
       "name": "gibson",
       "user": "neal",
       "local_ip": "192.168.4.22",
       "tailscale_hostname": "gibson",
-      "local_alias": "gibson",
       "tailscale_alias": "tsg",
-      "extra_aliases": []
+      "extra_aliases": [],
+      "ssh_set_env": {}
     }
   ]
 }
