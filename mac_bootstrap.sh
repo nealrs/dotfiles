@@ -71,6 +71,7 @@ PACKAGES=(
   zsh-syntax-highlighting
   fzf
   powerlevel10k
+  1password-cli
 )
 
 for pkg in "${PACKAGES[@]}"; do
@@ -283,6 +284,13 @@ fi
 symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
 symlink_dotfile "$DOTFILES/.motivation.md" ~/.motivation.md
 symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
+mkdir -p ~/.claude
+if command -v op &>/dev/null; then
+  info "Rendering claude settings via 1Password..."
+  op inject -i "$DOTFILES/claude_settings.json.tpl" -o ~/.claude/settings.json && ok "~/.claude/settings.json rendered" || info "op inject failed — sign into 1Password and re-run updatedotfiles"
+else
+  info "1Password CLI not ready — skipping claude settings (run updatedotfiles after signing in)"
+fi
 
 if [[ -L ~/.p10k.zsh ]]; then
   ok ".p10k.zsh symlink exists"

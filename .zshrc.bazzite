@@ -179,8 +179,18 @@ alias ts="tailscale"
 
 alias repos="cd $REPOS"
 alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
-alias updatedotfiles="git -C $REPOS/dotfiles pull && genssh"
 alias dots="cd $REPOS/dotfiles"
+
+unalias updatedotfiles 2>/dev/null
+function updatedotfiles(){
+  git -C "$REPOS/dotfiles" pull && genssh
+  mkdir -p ~/.claude
+  if command -v op &>/dev/null; then
+    op inject -i "$REPOS/dotfiles/claude_settings.json.tpl" -o ~/.claude/settings.json \
+      && echo "  ✓  ~/.claude/settings.json" \
+      || echo "  →  op inject failed — are you signed into 1Password?"
+  fi
+}
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
 alias psg="ps aux | grep"
