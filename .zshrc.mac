@@ -80,6 +80,7 @@ function updatedotfiles(){
       && echo "  ✓  ~/.claude/settings.json" \
       || echo "  →  op inject failed — are you signed into 1Password?"
   fi
+  source ~/.zshrc
 }
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
