@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# rename — normalize markdown, txt, and PDF filenames to YYYY-MM-DD-kebab-case.{ext}
+# rename — normalize markdown, txt, PDF, and image filenames to YYYY-MM-DD-kebab-case.{ext}
 #
 # Markdown/txt: date from filename, falls back to first heading/line with a date
-# PDF:          date from filename only; falls back to slug-only if no date found
+# PDF/images:   date from filename only; falls back to slug-only if no date found
+#               (images: heic, png, jpg, jpeg, gif, bmp, tiff, tif, webp — case-insensitive)
 # All types:    if no date found anywhere, still kebab-cases the title (SLUG)
 #
 # Usage:
@@ -31,7 +32,7 @@ TARGET_DIR="$(pwd)"
 
 # ── Args ──────────────────────────────────────────────────────────────────────
 usage() {
-  echo -e "${BOLD}rn${NC} — normalize markdown, txt, and PDF filenames to YYYY-MM-DD-kebab-case"
+  echo -e "${BOLD}rn${NC} — normalize markdown, txt, PDF, and image filenames to YYYY-MM-DD-kebab-case"
   echo ""
   echo "Usage: rn [-r] [-y] [-n] [-h] [directory]"
   echo ""
@@ -354,11 +355,14 @@ process_text_file() {
   RENAMED=$((RENAMED + 1))
 }
 
-# ── Core file processor (PDF) ─────────────────────────────────────────────────
-process_pdf() {
+# ── Core file processor (PDF + images) ────────────────────────────────────────
+# $1 = filepath, $2 = output extension (lowercased; preserves target's own case as the ext)
+process_binary_file() {
   local filepath="$1"
+  local ext="$2"
   local dir; dir=$(dirname "$filepath")
-  local base; base=$(basename "$filepath" .pdf)
+  local base; base=$(basename "$filepath")
+  base="${base%.*}"
 
   local year month day slug newname newpath date_source=""
 
@@ -378,11 +382,11 @@ process_pdf() {
   fi
 
   if [ "$date_source" = "slug-only" ]; then
-    newname="${slug}.pdf"
+    newname="${slug}.${ext}"
   else
     newname="${year}-${month}-${day}"
     [ -n "$slug" ] && newname="${newname}-${slug}"
-    newname="${newname}.pdf"
+    newname="${newname}.${ext}"
   fi
   newpath="${dir}/${newname}"
 
@@ -418,6 +422,8 @@ echo "────────────────────────�
 FIND_DEPTH="-maxdepth 1"
 [ "$RECURSIVE" = true ] && FIND_DEPTH=""
 
+IMG_EXTS=(heic png jpg jpeg gif bmp tiff tif webp)
+
 # ── Preview pass (always dry-run) ─────────────────────────────────────────────
 DRY_RUN=true
 while IFS= read -r -d '' file; do
@@ -429,8 +435,14 @@ while IFS= read -r -d '' file; do
 done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.txt" -type f -print0 | sort -z)
 
 while IFS= read -r -d '' file; do
-  process_pdf "$file"
-done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.pdf" -type f -print0 | sort -z)
+  process_binary_file "$file" "pdf"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -iname "*.pdf" -type f -print0 | sort -z)
+
+for ext in "${IMG_EXTS[@]}"; do
+  while IFS= read -r -d '' file; do
+    process_binary_file "$file" "$ext"
+  done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -iname "*.${ext}" -type f -print0 | sort -z)
+done
 
 echo "────────────────────────────────────────"
 echo -e "Would rename: ${GREEN}${RENAMED}${NC}  |  Already OK: ${CYAN}${ALREADY_OK}${NC}  |  Skip: ${YELLOW}${SKIPPED}${NC}$([ "$CONFLICTS" -gt 0 ] && echo "  |  Conflicts: ${RED}${CONFLICTS}${NC}" || true)"
@@ -471,8 +483,14 @@ while IFS= read -r -d '' file; do
 done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.txt" -type f -print0 | sort -z)
 
 while IFS= read -r -d '' file; do
-  process_pdf "$file"
-done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -name "*.pdf" -type f -print0 | sort -z)
+  process_binary_file "$file" "pdf"
+done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -iname "*.pdf" -type f -print0 | sort -z)
+
+for ext in "${IMG_EXTS[@]}"; do
+  while IFS= read -r -d '' file; do
+    process_binary_file "$file" "$ext"
+  done < <(/usr/bin/find "$TARGET_DIR" $FIND_DEPTH -iname "*.${ext}" -type f -print0 | sort -z)
+done
 
 echo "────────────────────────────────────────"
 echo -e "Renamed: ${GREEN}${RENAMED}${NC}  |  Skipped: ${YELLOW}${SKIPPED}${NC}$([ "$CONFLICTS" -gt 0 ] && echo "  |  Conflicts: ${RED}${CONFLICTS}${NC}" || true)"
