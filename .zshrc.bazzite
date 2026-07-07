@@ -209,13 +209,14 @@ function wan(){
 }
 
 function lan(){
+  local ip label
   while IFS= read -r iface; do
-    local ip=$(ip -4 addr show "$iface" 2>/dev/null | awk '/inet / {split($2,a,"/"); print a[1]}')
+    ip=$(ip -4 addr show "$iface" 2>/dev/null | awk '/inet / {split($2,a,"/"); print a[1]}')
     [[ -n "$ip" ]] || continue
-    local label
     case "$iface" in
       wl*) label="Wi-Fi" ;;
       en*|eth*) label="Ethernet" ;;
+      tailscale0) label="tailscale" ;;
       *) label="$iface" ;;
     esac
     echo "$label: \e[33m$ip\e[0m"
