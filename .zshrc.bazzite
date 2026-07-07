@@ -199,8 +199,8 @@ alias psg="ps aux | grep"
 # FUNCTIONS — network
 # ============================================================
 function wan(){
-  local data=$(curl -s https://ipinfo.io/json)
-  local ip6=$(curl -s https://api64.ipify.org)
+  local data=$(curl -s --max-time 3 https://ipinfo.io/json)
+  local ip6=$(curl -s --max-time 3 https://api64.ipify.org)
   local ip=$(echo $data | grep -o '"ip": *"[^"]*"' | cut -d'"' -f4)
   local city=$(echo $data | grep -o '"city": *"[^"]*"' | cut -d'"' -f4)
   local country=$(echo $data | grep -o '"country": *"[^"]*"' | cut -d'"' -f4)
@@ -231,7 +231,7 @@ function net(){
 }
 
 function weather(){
-  curl 'wttr.in?format=3'
+  curl --max-time 3 'wttr.in?format=3'
 }
 
 function wifi(){
