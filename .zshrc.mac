@@ -79,6 +79,8 @@ function updatedotfiles(){
     op inject -i "$REPOS/dotfiles/claude_settings.json.tpl" -o ~/.claude/settings.json \
       && echo "  ✓  ~/.claude/settings.json" \
       || echo "  →  op inject failed — are you signed into 1Password?"
+  else
+    echo "  →  1Password CLI (op) not installed — skipping ~/.claude/settings.json"
   fi
   source ~/.zshrc
 }
