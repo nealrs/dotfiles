@@ -3,11 +3,13 @@
 # Run via: genssh
 
 _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_is_darwin=0
+[ "$(uname -s)" = "Darwin" ] && _is_darwin=1
 
-python3 - "$_dir/.machines.json" "$_dir/ssh_config.base" <<'PY'
+python3 - "$_dir/.machines.json" "$_dir/ssh_config.base" "$_is_darwin" <<'PY'
 import json, sys, os, pathlib
 
-json_path, base_path = sys.argv[1], sys.argv[2]
+json_path, base_path, is_darwin = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
 
 with open(json_path) as f:
     hosts = json.load(f)["hosts"]
@@ -44,7 +46,17 @@ for h in hosts:
 
 if os.path.isfile(base_path):
     with open(base_path) as f:
-        lines.append(f.read().rstrip())
+        base_lines = f.read().rstrip("\n").split("\n")
+    if not is_darwin:
+        # UseKeychain is a macOS-only OpenSSH keyword; portable OpenSSH on
+        # Linux fatals on it ("Bad configuration option"), so strip the
+        # directive lines (not comments) rather than rely on IgnoreUnknown
+        # scoping to save it.
+        def is_usekeychain_directive(l):
+            keyword = l.strip().split(None, 1)[0].lower() if l.strip() and not l.strip().startswith("#") else ""
+            return keyword in ("usekeychain", "ignoreunknown")
+        base_lines = [l for l in base_lines if not is_usekeychain_directive(l)]
+    lines.append("\n".join(base_lines).rstrip())
     lines.append("")
 
 out = pathlib.Path.home() / ".ssh" / "config"

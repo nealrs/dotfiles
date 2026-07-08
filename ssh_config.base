@@ -1,6 +1,11 @@
+# Global: must come before any Host block, otherwise it only registers when
+# that specific Host is the connection target, leaving it unregistered (and
+# UseKeychain fatal) for every other host. See gen_ssh_config.sh for the
+# macOS-only filtering of UseKeychain itself.
+IgnoreUnknown UseKeychain
+
 Host github.com
     AddKeysToAgent yes
-    IgnoreUnknown UseKeychain
     UseKeychain yes
     IdentityFile ~/.ssh/id_ed25519
     IdentityFile ~/.ssh/id_rsa
