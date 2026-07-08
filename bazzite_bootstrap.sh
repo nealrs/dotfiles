@@ -278,6 +278,14 @@ if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
 fi
 
 # ============================================================
+# SSH TRUST
+# ============================================================
+section "SSH trust"
+if [[ -f "$DOTFILES/print_ssh_trust.sh" ]]; then
+  bash "$DOTFILES/print_ssh_trust.sh"
+fi
+
+# ============================================================
 # DONE
 # ============================================================
 echo -e "\n${GREEN}Bootstrap complete.${NC}\n"
@@ -289,4 +297,5 @@ if [[ -f ~/.ssh/id_ed25519 ]]; then
   echo "  4. Add your SSH key to GitHub:"
   echo "     https://github.com/settings/ssh/new"
 fi
+echo "  5. Run the ssh-copy-id commands above to authorize this machine on the others"
 echo ""

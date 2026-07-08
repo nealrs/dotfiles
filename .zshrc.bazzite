@@ -179,6 +179,7 @@ alias ts="tailscale"
 
 alias repos="cd $REPOS"
 alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
+alias sshtrust="bash $REPOS/dotfiles/print_ssh_trust.sh"
 alias dots="cd $REPOS/dotfiles"
 
 unalias updatedotfiles 2>/dev/null

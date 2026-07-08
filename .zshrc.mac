@@ -69,6 +69,7 @@ alias reload="source ~/.zshrc"
 alias rel="source ~/.zshrc"
 alias resource="source ~/.zshrc"
 alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
+alias sshtrust="bash $REPOS/dotfiles/print_ssh_trust.sh"
 alias dots="cd $REPOS/dotfiles"
 
 unalias updatedotfiles 2>/dev/null
