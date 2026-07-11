@@ -7,7 +7,7 @@
   },
   "permissions": {
     "allow": [
-      "mcp_claude_ai_neal_todo",
+      "mcp__claude_ai_neal_todo__*",
       "WebSearch",
       "WebFetch",
       "Read",
