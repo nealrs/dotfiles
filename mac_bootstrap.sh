@@ -129,6 +129,8 @@ CASKS=(
   steermouse
   sonos
   zoom
+  claude
+  claude-code
 )
 
 for cask in "${CASKS[@]}"; do
