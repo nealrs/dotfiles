@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "neal-todos": {
-      "type": "sse",
+      "type": "http",
       "url": "http://kewtie:3737/mcp/{{ op://Private/to-do-mcp/token }}"
     }
   },
