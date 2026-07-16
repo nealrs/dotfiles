@@ -2,20 +2,25 @@
 add_newline = true
 
 format = """
-$directory$git_branch$git_status$python$nodejs$cmd_duration$line_break$character"""
+$hostname$directory$git_branch$git_status$python$nodejs$cmd_duration$time$line_break$character"""
 
 [character]
 success_symbol = "[❱](green)"
 error_symbol = "[❱](red)"
 
+[hostname]
+ssh_only = true
+format = "[$hostname]($style) "
+style = "bold yellow"
+
 [directory]
-truncation_length = 4
-truncate_to_repo = true
-style = "green"
+truncation_length = 0
+truncate_to_repo = false
+style = "cyan"
 
 [git_branch]
 format = "[$symbol$branch]($style) "
-symbol = " "
+symbol = ""
 style = "purple"
 
 [git_status]
@@ -42,4 +47,6 @@ format = "[$duration]($style) "
 style = "yellow"
 
 [time]
-disabled = true
+disabled = false
+format = "[$time]($style) "
+style = "bold dimmed white"
