@@ -48,6 +48,15 @@ EOF
   sudo rpm-ostree install 1password && ok "1password — reboot required" || info "1password failed"
 fi
 
+# Ghostty — Fedora COPR (no official Fedora/Flathub package yet)
+if rpm -q ghostty &>/dev/null; then
+  ok "ghostty"
+else
+  info "Enabling ghostty COPR (scottames/ghostty)..."
+  sudo dnf copr enable -y scottames/ghostty
+  sudo rpm-ostree install ghostty && ok "ghostty — reboot required" || info "ghostty failed"
+fi
+
 # Deskflow — no yum repo; install manually from GitHub releases
 if rpm -q deskflow &>/dev/null; then
   ok "deskflow"
@@ -271,6 +280,8 @@ fi
 
 mkdir -p ~/.config
 symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
+mkdir -p ~/.config/ghostty
+symlink_dotfile "$DOTFILES/ghostty.linux.config" ~/.config/ghostty/config
 
 if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
   info "Generating ~/.ssh/config from .machines.json..."

@@ -286,6 +286,8 @@ fi
 symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
 symlink_dotfile "$DOTFILES/.motivation.md" ~/.motivation.md
 symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
+mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
+symlink_dotfile "$DOTFILES/ghostty.mac.config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
 mkdir -p ~/.claude
 if command -v op &>/dev/null; then
   info "Rendering claude settings via 1Password..."
