@@ -76,6 +76,7 @@ PACKAGES=(
   uv
   eza
   bat
+  btop
   fd
   ripgrep
   jq

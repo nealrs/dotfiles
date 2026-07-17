@@ -158,6 +158,7 @@ PACKAGES=(
   atuin
   zoxide
   eza
+  btop
   fzf
   jq
   direnv
