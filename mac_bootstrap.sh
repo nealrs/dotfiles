@@ -287,13 +287,6 @@ symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
 symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
 mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
 symlink_dotfile "$DOTFILES/ghostty.mac.config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
-mkdir -p ~/.claude
-if command -v op &>/dev/null; then
-  info "Rendering claude settings via 1Password..."
-  op inject -i "$DOTFILES/claude_settings.json.tpl" -o ~/.claude/settings.json && ok "~/.claude/settings.json rendered" || info "op inject failed — sign into 1Password and re-run updatedotfiles"
-else
-  info "1Password CLI not ready — skipping claude settings (run updatedotfiles after signing in)"
-fi
 
 if [[ -L ~/.p10k.zsh ]]; then
   ok ".p10k.zsh symlink exists"
@@ -315,6 +308,21 @@ fi
 section "SSH trust"
 if [[ -f "$DOTFILES/print_ssh_trust.sh" ]]; then
   bash "$DOTFILES/print_ssh_trust.sh"
+fi
+
+# ============================================================
+# CLAUDE CODE SETTINGS
+# Last on purpose: op inject depends on the 1Password CLI being installed
+# AND signed in, which often isn't true yet on a first run. Everything else
+# in this script should succeed regardless of whether this step does.
+# ============================================================
+section "Claude Code settings"
+mkdir -p ~/.claude
+if command -v op &>/dev/null; then
+  info "Rendering claude settings via 1Password..."
+  op inject -i "$DOTFILES/claude_settings.json.tpl" -o ~/.claude/settings.json && ok "~/.claude/settings.json rendered" || info "op inject failed — sign into 1Password and re-run updatedotfiles"
+else
+  info "1Password CLI not ready — skipping claude settings (run updatedotfiles after signing in)"
 fi
 
 # ============================================================

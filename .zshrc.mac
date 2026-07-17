@@ -270,7 +270,8 @@ if [ -d "$NVM_DIR/versions/node" ]; then
   __nvm_default=""
   if [ -s "$NVM_DIR/alias/default" ]; then
     __nvm_default_alias=$(<"$NVM_DIR/alias/default")
-    [[ "$__nvm_default_alias" == v[0-9]* ]] && __nvm_default="$__nvm_default_alias"
+    __nvm_default_alias="${__nvm_default_alias#v}"
+    [ -n "$__nvm_default_alias" ] && __nvm_default=$(command ls "$NVM_DIR/versions/node" 2>/dev/null | sed 's/^v//' | command grep -E "^${__nvm_default_alias}(\.|\$)" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
   fi
   [ -z "$__nvm_default" ] && __nvm_default=$(command ls "$NVM_DIR/versions/node" 2>/dev/null | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
   [ -n "$__nvm_default" ] && __nvm_default="v$__nvm_default"
