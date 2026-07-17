@@ -35,7 +35,7 @@ else
     'BEGIN{
        t1=u1+n1+s1+i1+wa1; t2=u2+n2+s2+i2+wa2;
        dt=t2-t1; didle=(i2+wa2)-(i1+wa1);
-       printf "%.0f", dt>0 ? (dt-didle)/dt*100 : 0
+       printf "%.0f", (dt>0 ? (dt-didle)/dt*100 : 0)
      }')
 fi
 row "CPU load" "${busy}% busy  (load avg ${load1}, ${cores} cores)"
@@ -100,7 +100,14 @@ pct_mem=$(awk -v u="$used" -v t="$total" 'BEGIN{printf "%.0f", (u/t)*100}')
 row "Memory" "$(fmt_gb "$used") / $(fmt_gb "$total")  (${pct_mem}%)"
 
 # ============================================================
-# Disk (root filesystem)
+# Disk (root filesystem — falls back to /var on immutable distros
+# like Bazzite/Silverblue, where / is a tiny composefs/overlay
+# image and df would report bogus 0-byte free space)
 # ============================================================
-read -r dtotal dused dfree dpct <<< "$(df -k / | awk 'NR==2{print $2*1024, $3*1024, $4*1024, $5}')"
+diskpath="/"
+if [[ "$OS" != "Darwin" ]]; then
+  rootfs=$(findmnt -no FSTYPE / 2>/dev/null)
+  [[ "$rootfs" == "composefs" || "$rootfs" == "overlay" ]] && diskpath="/var"
+fi
+read -r dtotal dused dfree dpct <<< "$(df -k "$diskpath" | awk 'NR==2{print $2*1024, $3*1024, $4*1024, $5}')"
 row "Disk free" "$(fmt_gb "$dfree") free of $(fmt_gb "$dtotal")  (${dpct} used)"
