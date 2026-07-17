@@ -1,4 +1,4 @@
-# .zshrc for Bazzite (Linux / Wayland)
+# .zshrc for Linux (Bazzite/Fedora, Ubuntu/Debian)
 # ============================================================
 # DEPENDENCIES
 # ============================================================
@@ -180,6 +180,7 @@ alias ts="tailscale"
 alias repos="cd $REPOS"
 alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
 alias sshtrust="bash $REPOS/dotfiles/print_ssh_trust.sh"
+alias health="bash $REPOS/dotfiles/health.sh"
 alias dots="cd $REPOS/dotfiles"
 
 unalias updatedotfiles 2>/dev/null
@@ -263,7 +264,7 @@ function mo(){
   [[ -f "$_f" ]] || curl -fsSo "$_f" https://raw.githubusercontent.com/nealrs/dotfiles/master/motivation.md
   local things=("${(@f)$(grep '^- ' "$_f" | sed 's/^- //')}")
   local idx=$(( RANDOM % ${#things[@]} + 1 ))
-  printf "\nBro, ${things[$idx]}.\n\n"
+  printf "\nBro, ${things[$idx]}.\n"
 }
 
 # ============================================================
@@ -278,9 +279,12 @@ function hi(){
     fi
   fi
 
+  echo ""
+  bash "$REPOS/dotfiles/health.sh"
   net
-  mo
+  echo ""
   weather
+  mo
 }
 
 # ============================================================

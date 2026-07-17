@@ -1,5 +1,7 @@
 #!/bin/bash
-# bazzite_bootstrap.sh — sets up a new Bazzite/Linux box with everything needed for .zshrc.bazzite
+# linux_bootstrap.sh — sets up a new Linux box with everything needed for .zshrc.linux
+# Supports Bazzite/Fedora (rpm-ostree) and Ubuntu/Debian (apt). Detects which
+# one it's running on and branches only where the package manager differs.
 # https://github.com/nealrs/dotfiles
 
 read -p "Email address (for SSH key): " EMAIL
@@ -14,6 +16,17 @@ info()    { echo -e "${YELLOW}→${NC}  $1"; }
 section() { echo -e "\n${CYAN}== $1 ==${NC}"; }
 
 # ============================================================
+# OS DETECTION
+# ============================================================
+if command -v rpm-ostree &>/dev/null; then
+  OS_FAMILY="ostree"
+elif command -v apt-get &>/dev/null; then
+  OS_FAMILY="apt"
+else
+  OS_FAMILY="unknown"
+fi
+
+# ============================================================
 # HOST IDENTITY
 # ============================================================
 section "Host identity"
@@ -26,17 +39,19 @@ else
 fi
 
 # ============================================================
-# RPM-OSTREE (system packages — requires reboot after)
+# SYSTEM PACKAGES (1Password, Ghostty, Deskflow)
+# rpm-ostree branch requires a reboot after; apt branch does not.
 # ============================================================
-section "System packages (rpm-ostree)"
+if [[ "$OS_FAMILY" == "ostree" ]]; then
+  section "System packages (rpm-ostree)"
 
-# 1Password — official RPM repo
-if rpm -q 1password &>/dev/null; then
-  ok "1password"
-else
-  info "Setting up 1Password repo..."
-  sudo rpm --import https://downloads.1password.com/linux/keys/1password.asc
-  sudo tee /etc/yum.repos.d/1password.repo > /dev/null <<'EOF'
+  # 1Password — official RPM repo
+  if rpm -q 1password &>/dev/null; then
+    ok "1password"
+  else
+    info "Setting up 1Password repo..."
+    sudo rpm --import https://downloads.1password.com/linux/keys/1password.asc
+    sudo tee /etc/yum.repos.d/1password.repo > /dev/null <<'EOF'
 [1password]
 name=1Password Stable Channel
 baseurl=https://downloads.1password.com/linux/rpm/stable/x86_64
@@ -45,24 +60,66 @@ gpgcheck=1
 repo_gpgcheck=1
 gpgkey=https://downloads.1password.com/linux/keys/1password.asc
 EOF
-  sudo rpm-ostree install 1password && ok "1password — reboot required" || info "1password failed"
-fi
+    sudo rpm-ostree install 1password && ok "1password — reboot required" || info "1password failed"
+  fi
 
-# Ghostty — Fedora COPR (no official Fedora/Flathub package yet)
-if rpm -q ghostty &>/dev/null; then
-  ok "ghostty"
-else
-  info "Enabling ghostty COPR (scottames/ghostty)..."
-  sudo dnf copr enable -y scottames/ghostty
-  sudo rpm-ostree install ghostty && ok "ghostty — reboot required" || info "ghostty failed"
-fi
+  # Ghostty — Fedora COPR (no official Fedora/Flathub package yet)
+  if rpm -q ghostty &>/dev/null; then
+    ok "ghostty"
+  else
+    info "Enabling ghostty COPR (scottames/ghostty)..."
+    sudo dnf copr enable -y scottames/ghostty
+    sudo rpm-ostree install ghostty && ok "ghostty — reboot required" || info "ghostty failed"
+  fi
 
-# Deskflow — no yum repo; install manually from GitHub releases
-if rpm -q deskflow &>/dev/null; then
-  ok "deskflow"
+  # Deskflow — no yum repo; install manually from GitHub releases
+  if rpm -q deskflow &>/dev/null; then
+    ok "deskflow"
+  else
+    info "Deskflow: download the RPM from https://github.com/deskflow/deskflow/releases"
+    info "  then run: sudo rpm-ostree install <path>.rpm && systemctl reboot"
+  fi
+
+elif [[ "$OS_FAMILY" == "apt" ]]; then
+  section "System packages (apt)"
+  sudo apt-get update -qq
+
+  # 1Password — official apt repo
+  if dpkg -s 1password &>/dev/null; then
+    ok "1password"
+  else
+    info "Setting up 1Password apt repo..."
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
+      sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
+    echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | \
+      sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
+    sudo apt-get update -qq
+    sudo apt-get install -y 1password && ok "1password" || info "1password failed"
+  fi
+
+  # Ghostty — official Ubuntu repo on 26.04+, community packages otherwise
+  if dpkg -s ghostty &>/dev/null; then
+    ok "ghostty"
+  elif apt-cache show ghostty &>/dev/null 2>&1; then
+    info "Installing ghostty (official repo)..."
+    sudo apt-get install -y ghostty && ok "ghostty" || info "ghostty failed"
+  else
+    info "ghostty not in apt repos on this release — using community packages (mkasberg/ghostty-ubuntu)..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)" && \
+      ok "ghostty" || info "ghostty failed"
+  fi
+
+  # Deskflow — no reliable repo across releases; install manually from GitHub releases
+  if dpkg -s deskflow &>/dev/null; then
+    ok "deskflow"
+  else
+    info "Deskflow: download the .deb for your release from https://github.com/deskflow/deskflow/releases"
+    info "  then run: sudo apt install ./deskflow-<version>-<codename>-x86_64.deb"
+  fi
+
 else
-  info "Deskflow: download the RPM from https://github.com/deskflow/deskflow/releases"
-  info "  then run: sudo rpm-ostree install <path>.rpm && systemctl reboot"
+  section "System packages"
+  info "Unrecognized package manager (no rpm-ostree or apt-get found) — skipping 1Password/Ghostty/Deskflow"
 fi
 
 # ============================================================
@@ -127,20 +184,24 @@ fi
 # ============================================================
 section "Flatpak apps"
 
-flatpak_install() {
-  local id="$1" name="$2"
-  if flatpak list --columns=application 2>/dev/null | grep -qF "$id"; then
-    ok "$name"
-  else
-    info "Installing $name..."
-    flatpak install -y flathub "$id" 2>/dev/null && ok "$name" || \
-      info "$name failed — ensure Flathub is enabled: flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo"
-  fi
-}
+if ! command -v flatpak &>/dev/null; then
+  info "flatpak not installed — skipping Slack/LocalSend (Ubuntu: sudo apt install flatpak)"
+else
+  flatpak_install() {
+    local id="$1" name="$2"
+    if flatpak list --columns=application 2>/dev/null | grep -qF "$id"; then
+      ok "$name"
+    else
+      info "Installing $name..."
+      flatpak install -y flathub "$id" 2>/dev/null && ok "$name" || \
+        info "$name failed — ensure Flathub is enabled: flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo"
+    fi
+  }
 
-flatpak_install com.slack.Slack "Slack"
-flatpak_install org.localsend.localsend_app "LocalSend"
-# flatpak_install us.zoom.Zoom "Zoom"
+  flatpak_install com.slack.Slack "Slack"
+  flatpak_install org.localsend.localsend_app "LocalSend"
+  # flatpak_install us.zoom.Zoom "Zoom"
+fi
 
 # ============================================================
 # UV (Python toolchain)
@@ -267,7 +328,7 @@ else
   ok "cloned to $DOTFILES"
 fi
 
-symlink_dotfile "$DOTFILES/.zshrc.bazzite" ~/.zshrc
+symlink_dotfile "$DOTFILES/.zshrc.linux" ~/.zshrc
 symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
 mkdir -p ~/.claude
 if command -v op &>/dev/null; then
@@ -300,7 +361,9 @@ fi
 # ============================================================
 echo -e "\n${GREEN}Bootstrap complete.${NC}\n"
 echo "  Next steps:"
-echo "  1. systemctl reboot  (if rpm-ostree installed anything new)"
+if [[ "$OS_FAMILY" == "ostree" ]]; then
+  echo "  1. systemctl reboot  (if rpm-ostree installed anything new)"
+fi
 echo "  2. Log out and back in (or exec \$ZSH_PATH) to switch to zsh"
 echo "  3. source ~/.zshrc"
 if [[ -f ~/.ssh/id_ed25519 ]]; then

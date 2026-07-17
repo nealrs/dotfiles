@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # machines.sh — generates ssh aliases from .machines.json (kewtie, gibson, etc.)
-# Source from .zshrc.mac / .zshrc.bazzite with the json path as $1:
+# Source from .zshrc.mac / .zshrc.linux with the json path as $1:
 #   [[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/.machines.json"
 # Edit .machines.json to add/rename hosts — never hardcode IPs in zshrc files.
 #
