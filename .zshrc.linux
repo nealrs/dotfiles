@@ -293,11 +293,24 @@ function hi(){
 hi
 
 # ============================================================
-# NVM (lazy-loaded — only initializes on first `nvm` call)
+# NVM (default version primed onto PATH at startup; full nvm()
+# function loads lazily — only sources nvm.sh on first `nvm` call)
 # ============================================================
+export NVM_DIR="$HOME/.config/nvm"
+if [ -d "$NVM_DIR/versions/node" ]; then
+  __nvm_default=""
+  if [ -s "$NVM_DIR/alias/default" ]; then
+    __nvm_default_alias=$(<"$NVM_DIR/alias/default")
+    [[ "$__nvm_default_alias" == v[0-9]* ]] && __nvm_default="$__nvm_default_alias"
+  fi
+  [ -z "$__nvm_default" ] && __nvm_default=$(command ls "$NVM_DIR/versions/node" 2>/dev/null | sed 's/^v//' | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)
+  [ -n "$__nvm_default" ] && __nvm_default="v$__nvm_default"
+  [ -d "$NVM_DIR/versions/node/$__nvm_default/bin" ] && export PATH="$NVM_DIR/versions/node/$__nvm_default/bin:$PATH"
+  unset __nvm_default __nvm_default_alias
+fi
+
 function nvm(){
   unfunction nvm
-  export NVM_DIR="$HOME/.config/nvm"
   [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
   [ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
   nvm "$@"
