@@ -39,6 +39,18 @@ else
 fi
 
 # ============================================================
+# CORE TOOLS (curl, jq)
+# curl ships by default on every distro this script targets and is needed
+# by the 1Password/Homebrew steps just below, so this is just a sanity check.
+# ============================================================
+section "Core tools"
+if command -v curl &>/dev/null; then
+  ok "curl"
+else
+  info "curl not found — unexpected on this distro. Install it manually before re-running this script."
+fi
+
+# ============================================================
 # SYSTEM PACKAGES (1Password, Ghostty, Deskflow)
 # rpm-ostree branch requires a reboot after; apt branch does not.
 # ============================================================
@@ -147,6 +159,7 @@ PACKAGES=(
   zoxide
   eza
   fzf
+  jq
   direnv
   zsh-autosuggestions
   zsh-syntax-highlighting

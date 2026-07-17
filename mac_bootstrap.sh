@@ -39,6 +39,18 @@ else
 fi
 
 # ============================================================
+# CORE TOOLS (curl, jq)
+# curl ships with macOS by default and is needed below to install Homebrew
+# itself, so this is just a sanity check, not an install step.
+# ============================================================
+section "Core tools"
+if command -v curl &>/dev/null; then
+  ok "curl"
+else
+  info "curl not found — unexpected on macOS. Install it manually before re-running this script."
+fi
+
+# ============================================================
 # HOMEBREW
 # ============================================================
 section "Homebrew"
@@ -66,6 +78,7 @@ PACKAGES=(
   bat
   fd
   ripgrep
+  jq
   direnv
   zsh-autosuggestions
   zsh-syntax-highlighting
