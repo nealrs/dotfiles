@@ -189,7 +189,7 @@ if command -v uv &>/dev/null; then
   ok "already installed ($(uv --version))"
 else
   info "Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+  curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --no-modify-path
   export PATH="$HOME/.local/bin:$PATH"
   ok "uv installed"
 fi
