@@ -229,7 +229,7 @@ function lan(){
       *) label="$iface" ;;
     esac
     echo "$label: \e[33m$ip\e[0m"
-  done < <(ip -o link show up | awk -F': ' '{print $2}' | grep -vE '^(lo|docker0|br-|veth|virbr)')
+  done < <(ip -o link show up | awk -F': ' '{print $2}' | command grep -vE '^(lo|docker0|br-|veth|virbr)')
 }
 
 function net(){
