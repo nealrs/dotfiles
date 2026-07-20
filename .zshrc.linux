@@ -24,6 +24,9 @@ export XDG_CACHE_HOME="$HOME/.cache"
 
 export PATH="$HOME/.local/bin:$PATH"
 
+export PNPM_HOME="$XDG_DATA_HOME/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+
 REPOS="$HOME/repos"
 [[ ! -d "$REPOS" && -d "$HOME/Documents/repos" ]] && REPOS="$HOME/Documents/repos"
 

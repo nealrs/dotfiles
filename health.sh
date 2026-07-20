@@ -1,9 +1,8 @@
 #!/bin/bash
 # health.sh — quick system health snapshot: CPU load/temp/fan, memory, disk free.
 # Runs on macOS and Linux (Bazzite/Fedora/Ubuntu). Uses native OS commands only —
-# glances takes ~2.5s to spin up per invocation (too slow to run on every shell
-# launch) and btop has no scriptable one-shot output — so this reads
-# sysctl/vm_stat/sensors/df/proc directly instead.
+# btop has no scriptable one-shot output, so this reads sysctl/vm_stat/sensors/df/proc
+# directly instead.
 # https://github.com/nealrs/dotfiles
 
 GREEN='\033[0;32m'

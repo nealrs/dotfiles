@@ -21,6 +21,9 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 
+export PNPM_HOME="$HOME/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+
 REPOS="$HOME/repos"
 [[ ! -d "$REPOS" && -d "$HOME/Documents/repos" ]] && REPOS="$HOME/Documents/repos"
 export VISUAL="nano"
@@ -303,3 +306,11 @@ source $(brew --prefix)/share/powerlevel10k/powerlevel10k.zsh-theme
 
 [ -f $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && \
   source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# pnpm
+export PNPM_HOME="/Users/neal/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end
