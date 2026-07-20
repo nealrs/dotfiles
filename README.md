@@ -76,7 +76,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 
 **Network/dev** — `ports` (listening sockets — `lsof` on Mac, `ss` on Linux), `headers` (`curl -I`), `web` (quick HTTP server via `python3`), `ii` (connectivity + a title-tag fetch from neal.rs).
 
-**System** — `health` (`health.sh`: CPU load/temp/fan, memory, disk free — same output shape on Mac and Linux, reading native OS commands directly rather than shelling out to something like glances/btop).
+**System** — `health` (`health.sh`: CPU load/temp/fan, memory, disk free — same output shape on Mac and Linux, reading native OS commands directly rather than shelling out to another tool).
 
 **Docker/Podman** — `dockup`/`dockupbuild`/`dockdown`/`docklog`/`dockps`/`dockexec`. On Linux, `docker` aliases to `podman` if Docker itself isn't installed; `pc` is `podman compose` when available.
 
@@ -107,15 +107,16 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 | `gen_ssh_config.sh` | Generates `~/.ssh/config` from `.machines.json` (`<name>-lan` / `<name>-tailnet` `Host` blocks) + `ssh_config.base`. Strips macOS-only directives when run on non-Darwin. Run via `genssh`. | writes `~/.ssh/config` |
 | `print_ssh_trust.sh` | Prints `ssh-copy-id` commands to authorize this machine's public key on every *other* machine in `.machines.json`. Run via `sshtrust`, also run once at the end of bootstrap. | — (prints only, does not run ssh-copy-id itself) |
 | `machines.sh` | Generates the per-host shell aliases (`kewtie`, `tsk`, `tsg`, ...) and the `tssh` function from `.machines.json`. Sourced by both zshrc files. | — |
+| `ssh_agent_init.sh` | Starts (or reconnects to) a persistent ssh-agent so the SSH key passphrase is asked once per agent lifetime, not once per shell. POSIX-compatible — sourced by `.zshrc.linux`; sourceable from `~/.profile` on Linux boxes that still use bash as the login shell (see header comment) so `git pull`/`push` stop prompting too. | — |
 | `mac_bootstrap.sh` | One-shot Mac setup: Xcode CLI tools, Homebrew + packages/casks/MAS apps, NVM/Node/pnpm, SSH keys, git config, clones the repo, symlinks dotfiles, generates `~/.ssh/config`, prints SSH trust snippet. | — |
-| `linux_bootstrap.sh` | Same shape, for any Linux box: detects `rpm-ostree` (Bazzite/Fedora) vs `apt-get` (Ubuntu/Debian) and branches only for 1Password/Ghostty/Deskflow install method; Linuxbrew + packages, sets zsh as login shell, Flatpak apps, NVM/Node/pnpm, SSH keys, git config, symlinks, `~/.ssh/config`, SSH trust snippet. Not run unattended on kewtie — see `kewtie_bootstrap.sh`. | — |
+| `linux_bootstrap.sh` | Same shape, for any Linux box: detects `rpm-ostree` (Bazzite/Fedora) vs `apt-get` (Ubuntu/Debian) and branches only for 1Password/Ghostty/Deskflow install method; also asks desktop vs. headless server and skips GUI-only steps (1Password app, Ghostty, Deskflow, Flatpak Slack/LocalSend, `chsh`) on headless boxes. Installs Podman (not Docker) as the container runtime for new boxes. Linuxbrew + packages, NVM/Node/pnpm, uv/Python, SSH keys, git config, symlinks, `~/.ssh/config`, SSH trust snippet. Not run unattended on kewtie — see `kewtie_bootstrap.sh`. | — |
 | `kewtie_bootstrap.sh` | Hand-walked equivalent of `linux_bootstrap.sh` for kewtie specifically: same end state, split into independently-runnable, idempotent sections with no `chsh` and no step that touches Docker/systemd/ports. Read `ubuntu.prd.md` for why. | — |
 | `ubuntu.prd.md` | Design doc for the Ubuntu/kewtie profile, written against kewtie's current state — the rollout constraints, and why kewtie gets the manual script instead of `linux_bootstrap.sh` directly. | — |
-| `health.sh` | Quick system health snapshot (CPU load/temp/fan, memory, disk free) using native OS commands (`sysctl`/`vm_stat` on Mac, `/proc`/`sensors` on Linux) rather than a slower tool like glances. Run via `health`. | — |
+| `health.sh` | Quick system health snapshot (CPU load/temp/fan, memory, disk free) using native OS commands (`sysctl`/`vm_stat` on Mac, `/proc`/`sensors` on Linux) directly, rather than shelling out to another tool. Run via `health`. | — |
 | `.zshrc.mac` | zsh config for Mac machines. | `~/.zshrc` (Mac) |
 | `.zshrc.linux` | zsh config for Linux machines (Bazzite/Fedora, Ubuntu/Debian). | `~/.zshrc` (Linux) |
 | `motivation.md` | One quote per `- line`, read by `mo()` directly from the repo. Auto-downloaded from GitHub raw into the repo if missing on a machine that skipped bootstrap. | — |
-| `.nanorc` | nano editor config (line numbers, softwrap, syntax highlighting). | `~/.nanorc` |
+| `.nanorc.mac` / `.nanorc.linux` | nano editor config (line numbers, softwrap, syntax highlighting) — split by OS because nano's `include` directive hard-errors (rather than skipping silently) if the brew-prefix path for the *other* OS doesn't exist, so this can't be one shared file. | `~/.nanorc` |
 | `.p10k.zsh` | Powerlevel10k prompt config, generated by `p10k configure` (Mac only). Bootstrap symlinks it only if it already exists in the repo. | `~/.p10k.zsh` (Mac) |
 | `starship.toml` | Starship prompt config (Linux only — Mac uses Powerlevel10k instead). | `~/.config/starship.toml` (Linux) |
 | `ghostty.mac.config` | Ghostty config for Mac: shared appearance (font, theme, cursor) plus sudo shell integration. Duplicated from `ghostty.linux.config` rather than shared via `config-file` — that directive doesn't resolve reliably through a symlinked dotfile. | `~/Library/Application Support/com.mitchellh.ghostty/config` (Mac) |
@@ -125,6 +126,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 | `claude_settings.json.tpl` | Template for Claude Code settings (MCP servers, permission allow/deny lists) with a 1Password secret reference. Rendered via `op inject` in `updatedotfiles`/bootstrap. | renders to `~/.claude/settings.json` (not committed) |
 | `q11.json` | Keyboard config backup, unrelated to shell setup. | — |
 | `fusion_drive.sh` | One-off aliases (`diskcheck`, `nofusion`) for a specific dying HDD on an iMac 2019 Fusion Drive — not sourced by any zshrc, not part of the general machine setup. | — |
+| `kewtie_headless.sh` | One-off aliases (`gdmcheck`, `gdmoff`/`gdmon`, `gdmstop`/`gdmstart`, `gdmverify`) to boot kewtie without gdm3/X/Wayland, since it's SSH-only in practice. Independent of Docker and SSH (separate systemd targets/logind seat) — not sourced by any zshrc, not part of the general machine setup. | — |
 
 ## `$REPOS` resolution
 

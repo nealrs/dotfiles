@@ -2,6 +2,11 @@
 # linux_bootstrap.sh — sets up a new Linux box with everything needed for .zshrc.linux
 # Supports Bazzite/Fedora (rpm-ostree) and Ubuntu/Debian (apt). Detects which
 # one it's running on and branches only where the package manager differs.
+# Also asks desktop vs. headless server and skips GUI-only steps (1Password
+# app, Ghostty, Deskflow, Flatpak Slack/LocalSend, chsh) on headless boxes —
+# same reasoning as kewtie_bootstrap.sh's hard rules, generalized for any
+# fresh headless server (kewtie itself still uses that script by hand, since
+# it's already-running production infra, not a fresh box).
 # https://github.com/nealrs/dotfiles
 
 read -p "Email address (for SSH key): " EMAIL
@@ -25,6 +30,16 @@ elif command -v apt-get &>/dev/null; then
 else
   OS_FAMILY="unknown"
 fi
+
+# ============================================================
+# DEPLOYMENT TYPE — headless server vs. desktop
+# Headless skips GUI apps (1Password app, Ghostty, Deskflow, Flatpak
+# Slack/LocalSend) and chsh (no console fallback if a shell config breaks a
+# remote-only box). CLI tools (1password-cli via brew, etc.) install either way.
+# ============================================================
+HEADLESS=0
+read -p "Headless server, no GUI desktop (y/n)? " -n 1 -r; echo
+[[ $REPLY =~ ^[Yy]$ ]] && HEADLESS=1
 
 # ============================================================
 # HOST IDENTITY
@@ -51,10 +66,13 @@ else
 fi
 
 # ============================================================
-# SYSTEM PACKAGES (1Password, Ghostty, Deskflow)
+# SYSTEM PACKAGES (1Password, Ghostty, Deskflow) — desktop only
 # rpm-ostree branch requires a reboot after; apt branch does not.
 # ============================================================
-if [[ "$OS_FAMILY" == "ostree" ]]; then
+if [[ "$HEADLESS" == "1" ]]; then
+  section "System packages"
+  info "Headless — skipping 1Password app, Ghostty, Deskflow (GUI-only). 1Password CLI still installs via brew below."
+elif [[ "$OS_FAMILY" == "ostree" ]]; then
   section "System packages (rpm-ostree)"
 
   # 1Password — official RPM repo
@@ -135,6 +153,35 @@ else
 fi
 
 # ============================================================
+# CONTAINER RUNTIME (Podman)
+# Podman, not Docker, for new boxes: rootless/daemonless by default, and
+# .zshrc.linux already aliases docker -> podman when only podman is present.
+# kewtie stays on Docker — it's already running production containers;
+# migrating it is out of scope (see kewtie_bootstrap.sh's hard rules).
+# ============================================================
+if [[ "$OS_FAMILY" == "ostree" ]]; then
+  section "Container runtime (Podman)"
+  if command -v podman &>/dev/null; then
+    ok "podman ($(podman --version))"
+  else
+    info "Installing podman..."
+    sudo rpm-ostree install podman podman-compose && ok "podman — reboot required" || info "podman failed"
+  fi
+elif [[ "$OS_FAMILY" == "apt" ]]; then
+  section "Container runtime (Podman)"
+  if command -v podman &>/dev/null; then
+    ok "podman ($(podman --version))"
+  else
+    info "Installing podman..."
+    sudo apt-get update -qq
+    sudo apt-get install -y podman podman-compose && ok "podman installed" || info "podman failed"
+  fi
+else
+  section "Container runtime"
+  info "Unrecognized package manager — install podman manually: https://podman.io/docs/installation"
+fi
+
+# ============================================================
 # HOMEBREW (Linuxbrew)
 # ============================================================
 section "Homebrew (Linuxbrew)"
@@ -181,28 +228,37 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 # ============================================================
-# ZSH AS DEFAULT SHELL
+# ZSH AS DEFAULT SHELL — desktop only. Headless skips chsh: a broken shell
+# config with no console fallback can lock you out over SSH (same reasoning
+# as kewtie_bootstrap.sh's hard rule). Test with `zsh` by hand instead.
 # ============================================================
 section "Default shell"
-ZSH_PATH="$(brew --prefix)/bin/zsh"
-if [[ "$SHELL" == "$ZSH_PATH" ]]; then
-  ok "zsh already default ($ZSH_PATH)"
+if [[ "$HEADLESS" == "1" ]]; then
+  info "Headless — skipping chsh on purpose (no console fallback if zsh config breaks SSH access)."
+  info "Test it by hand instead: run 'zsh', check the prompt/aliases, then 'exit' back."
 else
-  if ! grep -qF "$ZSH_PATH" /etc/shells; then
-    info "Adding $ZSH_PATH to /etc/shells..."
-    echo "$ZSH_PATH" | sudo tee -a /etc/shells
+  ZSH_PATH="$(brew --prefix)/bin/zsh"
+  if [[ "$SHELL" == "$ZSH_PATH" ]]; then
+    ok "zsh already default ($ZSH_PATH)"
+  else
+    if ! grep -qF "$ZSH_PATH" /etc/shells; then
+      info "Adding $ZSH_PATH to /etc/shells..."
+      echo "$ZSH_PATH" | sudo tee -a /etc/shells
+    fi
+    info "Setting default shell to $ZSH_PATH..."
+    chsh -s "$ZSH_PATH"
+    ok "default shell set — takes effect on next login"
   fi
-  info "Setting default shell to $ZSH_PATH..."
-  chsh -s "$ZSH_PATH"
-  ok "default shell set — takes effect on next login"
 fi
 
 # ============================================================
-# FLATPAK APPS
+# FLATPAK APPS — desktop only (Slack/LocalSend are GUI apps)
 # ============================================================
 section "Flatpak apps"
 
-if ! command -v flatpak &>/dev/null; then
+if [[ "$HEADLESS" == "1" ]]; then
+  info "Headless — skipping Slack/LocalSend (GUI apps, nothing to run them on)."
+elif ! command -v flatpak &>/dev/null; then
   info "flatpak not installed — skipping Slack/LocalSend (Ubuntu: sudo apt install flatpak)"
 else
   flatpak_install() {
@@ -351,8 +407,12 @@ symlink_dotfile "$DOTFILES/.nanorc.linux" ~/.nanorc
 
 mkdir -p ~/.config
 symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
-mkdir -p ~/.config/ghostty
-symlink_dotfile "$DOTFILES/ghostty.linux.config" ~/.config/ghostty/config
+if [[ "$HEADLESS" == "1" ]]; then
+  info "Headless — skipping ghostty.linux.config, no terminal emulator to configure."
+else
+  mkdir -p ~/.config/ghostty
+  symlink_dotfile "$DOTFILES/ghostty.linux.config" ~/.config/ghostty/config
+fi
 
 if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
   info "Generating ~/.ssh/config from .machines.json..."
@@ -386,11 +446,19 @@ fi
 # DONE
 # ============================================================
 echo -e "\n${GREEN}Bootstrap complete.${NC}\n"
+if [[ "$HEADLESS" == "1" ]]; then
+  echo "  Headless — skipped: 1Password app, Ghostty, Deskflow, Flatpak Slack/LocalSend, chsh."
+  echo ""
+fi
 echo "  Next steps:"
 if [[ "$OS_FAMILY" == "ostree" ]]; then
   echo "  1. systemctl reboot  (if rpm-ostree installed anything new)"
 fi
-echo "  2. Log out and back in (or exec \$ZSH_PATH) to switch to zsh"
+if [[ "$HEADLESS" == "1" ]]; then
+  echo "  2. Run 'zsh' by hand to test it (prompt, aliases) — login shell is still bash"
+else
+  echo "  2. Log out and back in (or exec \$ZSH_PATH) to switch to zsh"
+fi
 echo "  3. source ~/.zshrc"
 if [[ -f ~/.ssh/id_ed25519 ]]; then
   echo "  4. Add your SSH key to GitHub:"
