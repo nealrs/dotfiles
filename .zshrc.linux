@@ -40,10 +40,11 @@ export COLORTERM="${COLORTERM:-truecolor}"
 [[ -d /var/data ]] && export OLLAMA_MODELS="/var/data/models"
 export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
 
-if [ -z "$SSH_AUTH_SOCK" ]; then
-  eval "$(ssh-agent -s)" > /dev/null
-  ssh-add ~/.ssh/id_ed25519 2>/dev/null
-fi
+# See ssh_agent_init.sh — persists the agent across shells/sessions instead
+# of spawning a fresh one (and re-prompting for the passphrase) every time.
+# Also sourceable from bash — see the header comment in that file — so
+# `git pull`/`git push` stop prompting too, not just zsh.
+[[ -f "$REPOS/dotfiles/ssh_agent_init.sh" ]] && source "$REPOS/dotfiles/ssh_agent_init.sh"
 
 # ============================================================
 # ZSH OPTIONS
