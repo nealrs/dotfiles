@@ -8,7 +8,7 @@ set tabstospaces
 set softwrap
 set mouse
 
-# Syntax highlighting
-# Linux: /usr/share/nano/ is already loaded by /etc/nanorc
-# macOS (brew): include explicitly since there's no system nanorc
+# Syntax highlighting — included explicitly since brew-installed nano
+# (macOS or Linuxbrew) doesn't read the OS's system nanorc.
 include "/opt/homebrew/share/nano/*.nanorc"
+include "/home/linuxbrew/.linuxbrew/share/nano/*.nanorc"

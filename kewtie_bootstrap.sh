@@ -147,7 +147,7 @@ checkpoint "verify with: brew --version   — and: docker ps -q | wc -l   (shoul
 # 3. BREW PACKAGES
 # ============================================================
 section "3. Brew packages"
-PACKAGES=(zsh starship atuin zoxide eza btop fzf jq direnv zsh-autosuggestions zsh-syntax-highlighting 1password-cli)
+PACKAGES=(zsh starship atuin zoxide eza bat fd ripgrep nano btop fzf jq direnv zsh-autosuggestions zsh-syntax-highlighting 1password-cli)
 for pkg in "${PACKAGES[@]}"; do
   if brew list "$pkg" &>/dev/null 2>&1; then
     ok "$pkg"
@@ -182,9 +182,31 @@ info "existing project. It only activates in a project if you deliberately run '
 checkpoint "verify with: pnpm --version   — and confirm an existing npm project still works: npm run <whatever> as usual"
 
 # ============================================================
-# 5. SYMLINK DOTFILES
+# 5. UV (Python toolchain — additive only, doesn't touch system python)
 # ============================================================
-section "5. Symlink dotfiles"
+section "5. uv"
+if command -v uv &>/dev/null; then
+  ok "already installed ($(uv --version))"
+else
+  info "Installing uv..."
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+  ok "uv installed"
+fi
+
+if uv python list 2>/dev/null | grep -q "3.13"; then
+  ok "Python 3.13 already installed via uv"
+else
+  info "Installing Python 3.13 via uv..."
+  uv python install 3.13 && ok "Python 3.13 installed"
+fi
+
+checkpoint "verify with: uv --version   — and: docker ps -q | wc -l   (should still read $INITIAL_CONTAINERS)"
+
+# ============================================================
+# 6. SYMLINK DOTFILES
+# ============================================================
+section "6. Symlink dotfiles"
 symlink_dotfile() {
   local src="$1" dst="$2" label; label="$(basename "$dst")"
   if [[ -L "$dst" ]]; then
@@ -210,12 +232,12 @@ checkpoint "IMPORTANT — verify by hand before continuing: run 'zsh' (just the 
    Then 'exit' back to bash. Your login shell is still bash either way — this only tests it."
 
 # ============================================================
-# 6. REGENERATE ~/.ssh/config
+# 7. REGENERATE ~/.ssh/config
 # This only affects OUTBOUND `ssh <host>` FROM kewtie to other machines —
 # it does not touch sshd_config or anything about how other machines
 # connect INTO kewtie, so it cannot cause a lockout either way.
 # ============================================================
-section "6. Regenerate ~/.ssh/config"
+section "7. Regenerate ~/.ssh/config"
 BACKUP=""
 if [[ -f ~/.ssh/config ]]; then
   BACKUP=~/.ssh/config.bak.$(date +%Y%m%d%H%M%S)
@@ -229,9 +251,9 @@ fi
 checkpoint "verify with: diff \"${BACKUP:-/dev/null}\" ~/.ssh/config   then try: ssh gibson-tailnet (or any Host block) from kewtie"
 
 # ============================================================
-# 7. SSH TRUST (read-only — prints commands, changes nothing)
+# 8. SSH TRUST (read-only — prints commands, changes nothing)
 # ============================================================
-section "7. SSH trust"
+section "8. SSH trust"
 if [[ -f "$DOTFILES/print_ssh_trust.sh" ]]; then
   bash "$DOTFILES/print_ssh_trust.sh"
 fi
@@ -239,12 +261,12 @@ info "Those ssh-copy-id commands only add kewtie's PUBLIC key to the OTHER machi
 info "authorized_keys — nothing local to kewtie changes. Run them whenever you're ready."
 
 # ============================================================
-# 8. CLAUDE CODE SETTINGS (optional — needs 1Password CLI signed in)
+# 9. CLAUDE CODE SETTINGS (optional — needs 1Password CLI signed in)
 # Last on purpose: op inject depends on the 1Password CLI being installed
 # AND signed in, which often isn't true yet on a first run. Everything else
 # above should succeed regardless of whether this step does.
 # ============================================================
-section "8. Claude Code settings"
+section "9. Claude Code settings"
 mkdir -p ~/.claude
 if command -v op &>/dev/null; then
   info "Rendering ~/.claude/settings.json via 1Password..."

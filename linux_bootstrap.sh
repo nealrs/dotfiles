@@ -158,6 +158,10 @@ PACKAGES=(
   atuin
   zoxide
   eza
+  bat
+  fd
+  ripgrep
+  nano
   btop
   fzf
   jq
