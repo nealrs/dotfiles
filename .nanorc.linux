@@ -1,0 +1,15 @@
+# ~/.nanorc (Linux)
+# Extended syntax highlighting: https://github.com/scopatz/nanorc
+
+set autoindent
+set linenumbers
+set tabsize 2
+set tabstospaces
+set softwrap
+set mouse
+
+# Syntax highlighting — included explicitly since brew-installed nano
+# doesn't read the OS's system nanorc. nano errors out (rather than
+# skipping silently) if this directory doesn't exist, so this can't be a
+# single shared file with both Mac and Linux include paths — see .nanorc.mac.
+include "/home/linuxbrew/.linuxbrew/share/nano/*.nanorc"

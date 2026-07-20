@@ -298,7 +298,7 @@ else
 fi
 
 symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
-symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
+symlink_dotfile "$DOTFILES/.nanorc.mac" ~/.nanorc
 mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
 symlink_dotfile "$DOTFILES/ghostty.mac.config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
 

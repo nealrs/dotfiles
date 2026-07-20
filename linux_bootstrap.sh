@@ -347,7 +347,7 @@ else
 fi
 
 symlink_dotfile "$DOTFILES/.zshrc.linux" ~/.zshrc
-symlink_dotfile "$DOTFILES/.nanorc" ~/.nanorc
+symlink_dotfile "$DOTFILES/.nanorc.linux" ~/.nanorc
 
 mkdir -p ~/.config
 symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
