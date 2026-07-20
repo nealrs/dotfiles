@@ -24,7 +24,7 @@ SSH_AGENT_ENV="$HOME/.ssh/agent.env"
 ssh-add -l >/dev/null 2>&1
 case $? in
   1) ssh-add ~/.ssh/id_ed25519 2>/dev/null ;;                 # agent reachable, key not loaded yet
-  2) eval "$(ssh-agent -s)" > "$SSH_AGENT_ENV"                 # no agent reachable — start + persist
+  2) eval "$(ssh-agent -s | tee "$SSH_AGENT_ENV")" > /dev/null  # no agent reachable — start + persist
      chmod 600 "$SSH_AGENT_ENV"
      ssh-add ~/.ssh/id_ed25519 2>/dev/null ;;
 esac
