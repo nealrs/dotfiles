@@ -76,7 +76,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 
 **Network/dev** — `ports` (listening sockets — `lsof` on Mac, `ss` on Linux), `headers` (`curl -I`), `web` (quick HTTP server via `python3`), `ii` (connectivity + a title-tag fetch from neal.rs).
 
-**System** — `health` (`health.sh`: CPU load/temp/fan, memory, disk free — same output shape on Mac and Linux, reading native OS commands directly rather than shelling out to another tool).
+**System** — `health` (`health.sh`: CPU load/temp/fan, memory, disk free — same output shape on Mac and Linux, reading native OS commands directly rather than shelling out to another tool). `h` (`cmds.sh`: color-coded cheat sheet of every alias/function below — parses the section banners already in the active zshrc plus the SSH aliases `machines.sh` generates, so it can't drift from this list).
 
 **Docker/Podman** — `dockup`/`dockupbuild`/`dockdown`/`docklog`/`dockps`/`dockexec`. On Linux, `docker` aliases to `podman` if Docker itself isn't installed; `pc` is `podman compose` when available.
 
@@ -113,6 +113,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 | `kewtie_bootstrap.sh` | Hand-walked equivalent of `linux_bootstrap.sh` for kewtie specifically: same end state, split into independently-runnable, idempotent sections with no `chsh` and no step that touches Docker/systemd/ports. Read `ubuntu.prd.md` for why. | — |
 | `ubuntu.prd.md` | Design doc for the Ubuntu/kewtie profile, written against kewtie's current state — the rollout constraints, and why kewtie gets the manual script instead of `linux_bootstrap.sh` directly. | — |
 | `health.sh` | Quick system health snapshot (CPU load/temp/fan, memory, disk free) using native OS commands (`sysctl`/`vm_stat` on Mac, `/proc`/`sensors` on Linux) directly, rather than shelling out to another tool. Run via `health`. | — |
+| `cmds.sh` | Color-coded cheat sheet of every alias/function this repo defines: parses the `# ALIASES — x` / `# FUNCTIONS — x` section banners out of the active zshrc (picked by `uname`, same file symlinked to `~/.zshrc`) plus the SSH aliases `machines.sh` generates from `.machines.json` — nothing to keep in sync by hand except a few one-line function descriptions. Run via `h`. | — |
 | `.zshrc.mac` | zsh config for Mac machines. | `~/.zshrc` (Mac) |
 | `.zshrc.linux` | zsh config for Linux machines (Bazzite/Fedora, Ubuntu/Debian). | `~/.zshrc` (Linux) |
 | `motivation.md` | One quote per `- line`, read by `mo()` directly from the repo. Auto-downloaded from GitHub raw into the repo if missing on a machine that skipped bootstrap. | — |

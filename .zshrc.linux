@@ -186,6 +186,7 @@ alias genssh="bash $REPOS/dotfiles/gen_ssh_config.sh"
 alias sshtrust="bash $REPOS/dotfiles/print_ssh_trust.sh"
 alias health="bash $REPOS/dotfiles/health.sh"
 alias dots="cd $REPOS/dotfiles"
+alias h="zsh $REPOS/dotfiles/cmds.sh"
 
 unalias updatedotfiles 2>/dev/null
 function updatedotfiles(){
