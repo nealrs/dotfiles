@@ -1,5 +1,5 @@
 #!/bin/bash
-# health.sh — quick system health snapshot: CPU load/temp/fan, memory, disk free.
+# health.sh — quick system health snapshot: CPU load/temp, memory, disk free.
 # Runs on macOS and Linux (Bazzite/Fedora/Ubuntu). Uses native OS commands only —
 # btop has no scriptable one-shot output, so this reads sysctl/vm_stat/sensors/df/proc
 # directly instead.
@@ -62,25 +62,6 @@ else
   fi
   [[ -z "$temp" ]] && temp="n/a (install lm-sensors: sudo apt/dnf install lm-sensors && sudo sensors-detect)"
   row "CPU temp" "$temp"
-fi
-
-# ============================================================
-# Fan speed (silently omitted on macOS if no working tool is installed)
-# ============================================================
-fan=""
-if [[ "$OS" == "Darwin" ]]; then
-  if command -v istats &>/dev/null; then
-    fan=$(istats fan speed --value-only 2>/dev/null | grep -oE '^[0-9]+')
-  fi
-  if [[ -n "$fan" ]] && awk -v f="$fan" 'BEGIN{exit !(f>0)}'; then
-    row "Fan speed" "${fan} RPM"
-  fi
-else
-  if command -v sensors &>/dev/null; then
-    fan=$(sensors 2>/dev/null | grep -im1 'fan' | grep -oE '[0-9]+ *RPM')
-  fi
-  [[ -z "$fan" ]] && fan="n/a (needs lm-sensors, or no fan present)"
-  row "Fan speed" "$fan"
 fi
 
 # ============================================================
