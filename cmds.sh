@@ -38,7 +38,7 @@ func_desc=(
   rn              "run rename.sh — normalize file names/dates"
   mo              "random line from motivation.md"
   hi              "login banner: ascii art + health + net + weather + mo"
-  updatedotfiles  "git pull, regen ssh config + claude settings, re-source zshrc"
+  updatedots      "git pull, regen ssh config + claude settings, re-source zshrc"
 )
 
 # Same idea for aliases whose expansion doesn't explain itself (points at a script,

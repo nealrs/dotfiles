@@ -53,7 +53,7 @@ Finish with: log out/in (or `exec $ZSH_PATH`) to pick up zsh, `source ~/.zshrc`,
 
 1. Bootstrap it (above) — this generates its own SSH keypair.
 2. Add an entry for it to `.machines.json` (name, user, `local_ip` if it has one, `tailscale_hostname`, `tailscale_alias`, `ssh_set_env`).
-3. On every machine that should reach it (including Macs), run `updatedotfiles` (pulls the repo, regenerates `~/.ssh/config`) so it knows the new `Host` aliases, then `sshtrust` to get the `ssh-copy-id` command for the new target.
+3. On every machine that should reach it (including Macs), run `updatedots` (pulls the repo, regenerates `~/.ssh/config`) so it knows the new `Host` aliases, then `sshtrust` to get the `ssh-copy-id` command for the new target.
 
 ### Adding a new Mac (or any non-target machine)
 
@@ -86,7 +86,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 
 **SSH / machines** — generated per host in `.machines.json` by `machines.sh`: for each host with a `local_ip`, an alias named after it (e.g. `kewtie` → `ssh kewtie-lan`); for each host with a `tailscale_alias`, that alias (e.g. `tsk` → `ssh kewtie-tailnet`, `tsg` → `ssh gibson-tailnet`); plus any `extra_aliases`. `tssh <name>` connects to any host by name over Tailscale. `genssh` regenerates `~/.ssh/config` from `.machines.json` + `ssh_config.base`. `sshtrust` prints the `ssh-copy-id` commands to authorize this machine on every other one. `ts`/`ts-status`/`ts-up`/`ts-down` (Tailscale).
 
-**`updatedotfiles`** — `git pull` on the repo, `genssh`, re-renders `~/.claude/settings.json` via `op inject` (skips with a message if 1Password CLI isn't installed/signed in), then re-sources `~/.zshrc`.
+**`updatedots`** — `git pull` on the repo, `genssh`, re-renders `~/.claude/settings.json` via `op inject` (skips with a message if 1Password CLI isn't installed/signed in), then re-sources `~/.zshrc`.
 
 **Functions** — `wan`/`lan`/`net` (public + local IPs, shown at login), `weather` (wttr.in), `wifi` (power-cycle Wi-Fi), `mcd` (mkdir + cd), `rn` (runs `rename.sh` — see below), `mo` (random line from `motivation.md`), `hi` (login banner: ASCII art for this host, `net`, `mo`, `weather` — this is what prints the WAN/LAN/weather block you see on every new shell). `nvm` stays lazy (only `nvm.sh` sourcing waits for the first `nvm` call) but the default Node version is primed onto `PATH` at shell startup, so `node`/`npm` work immediately without forcing the full load or fighting a system Node on `PATH`.
 
@@ -94,7 +94,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 
 - **Private SSH keys never live in this repo.** Each machine generates its own keypair during bootstrap (`ssh-keygen`, prompted, skippable). Trust between machines is one-directional-per-pair and set up by copying a *public* key straight to the target's `~/.ssh/authorized_keys` via `ssh-copy-id` (see `print_ssh_trust.sh`) — nothing key-related is ever committed.
 - **`.machines.json`** has hostnames, usernames, LAN IPs (RFC1918, only reachable from inside the home network), and Tailscale hostnames/aliases. None of this is a credential, but it's real topology about home infrastructure in a public repo — don't add anything more sensitive than that here (no tokens, no passwords, no public IPs of anything you don't want indexed).
-- **`claude_settings.json.tpl`** contains a 1Password *reference* (`op://Private/to-do-mcp/token`), not a secret — `op inject` resolves it locally at render time (via `updatedotfiles` or bootstrap) into `~/.claude/settings.json`, which is never written back into the repo. Rendering silently no-ops (with a message) if the `op` CLI isn't installed or you're not signed in.
+- **`claude_settings.json.tpl`** contains a 1Password *reference* (`op://Private/to-do-mcp/token`), not a secret — `op inject` resolves it locally at render time (via `updatedots` or bootstrap) into `~/.claude/settings.json`, which is never written back into the repo. Rendering silently no-ops (with a message) if the `op` CLI isn't installed or you're not signed in.
 - **`.gitignore` only excludes OS noise (`.DS_Store`)** — nothing generated (rendered configs, keys, `~/.ssh/config`) is ever written inside the repo in the first place, it's all written to `$HOME` or `~/.ssh`/`~/.config`. Keep it that way: anything this repo writes should land outside the repo, not get committed.
 - **`q11.json`** is an unrelated keyboard (QMK/VIA) config backup — not read by any script here, just parked in the repo for safekeeping.
 
@@ -124,7 +124,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 | `ghostty.linux.config` | Ghostty config for Linux: same shared appearance as the Mac file, plus ctrl+c/ctrl+v copy-paste (no Cmd key on Linux). | `~/.config/ghostty/config` (Linux) |
 | `ascii_art.sh` | `banner_<name>` functions (one per machine, e.g. `banner_kewtie`, `banner_gibson`), sourced by `hi()` at shell startup. Auto-downloaded from GitHub raw if missing. | sourced, not symlinked |
 | `rename.sh` | Standalone file-renaming utility (normalizes markdown/txt/PDF/image filenames to `YYYY-MM-DD-kebab-case.ext`). Invoked via the `rn` function, which locates it under `~/repos/dotfiles` or `~/Documents/repos/dotfiles`. | invoked directly, not symlinked |
-| `claude_settings.json.tpl` | Template for Claude Code settings (MCP servers, permission allow/deny lists) with a 1Password secret reference. Rendered via `op inject` in `updatedotfiles`/bootstrap. | renders to `~/.claude/settings.json` (not committed) |
+| `claude_settings.json.tpl` | Template for Claude Code settings (MCP servers, permission allow/deny lists) with a 1Password secret reference. Rendered via `op inject` in `updatedots`/bootstrap. | renders to `~/.claude/settings.json` (not committed) |
 | `q11.json` | Keyboard config backup, unrelated to shell setup. | — |
 | `fusion_drive.sh` | One-off aliases (`diskcheck`, `nofusion`) for a specific dying HDD on an iMac 2019 Fusion Drive — not sourced by any zshrc, not part of the general machine setup. | — |
 | `kewtie_headless.sh` | One-off aliases (`gdmcheck`, `gdmoff`/`gdmon`, `gdmstop`/`gdmstart`, `gdmverify`) to boot kewtie without gdm3/X/Wayland, since it's SSH-only in practice. Independent of Docker and SSH (separate systemd targets/logind seat) — not sourced by any zshrc, not part of the general machine setup. | — |

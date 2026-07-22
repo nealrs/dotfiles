@@ -77,17 +77,15 @@ alias health="bash $REPOS/dotfiles/health.sh"
 alias dots="cd $REPOS/dotfiles"
 alias h="zsh $REPOS/dotfiles/cmds.sh"
 
-unalias updatedotfiles 2>/dev/null
-function updatedotfiles(){
+unalias updatedots 2>/dev/null
+function updatedots(){
   git -C "$REPOS/dotfiles" pull && genssh
-  mkdir -p ~/.claude
-  if command -v op &>/dev/null; then
-    op inject -i "$REPOS/dotfiles/claude_settings.json.tpl" -o ~/.claude/settings.json \
-      && echo "  ✓  ~/.claude/settings.json" \
-      || echo "  →  op inject failed — are you signed into 1Password?"
-  else
-    echo "  →  1Password CLI (op) not installed — skipping ~/.claude/settings.json"
-  fi
+  ok()   { echo "  ✓  $1"; }
+  info() { echo "  →  $1"; }
+  DOTFILES="$REPOS/dotfiles"
+  source "$DOTFILES/claude_settings.sh"
+  unset -f ok info inject_todo_token
+  unset DOTFILES OLD_TOKEN TOKEN
   source ~/.zshrc
 }
 alias path='echo $PATH | tr ":" "\n"'
@@ -138,7 +136,7 @@ alias dockexec="docker exec -it"
 # ============================================================
 alias gs="git status"
 alias ga="git add -A"
-alias gc="git commit -m"
+alias gc="git commit -am"
 alias gcl="git clone"
 alias gp="git push"
 alias gpl="git pull"
