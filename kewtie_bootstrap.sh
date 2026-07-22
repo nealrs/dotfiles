@@ -136,7 +136,7 @@ if command -v brew &>/dev/null; then
   ok "already installed ($(brew --version | head -1))"
 else
   info "Installing Linuxbrew — you'll be prompted for your sudo password once..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  /bin/bash -c "$(curl -fsSL --connect-timeout 10 https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ok "Linuxbrew installed"
 fi
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -189,7 +189,7 @@ if command -v uv &>/dev/null; then
   ok "already installed ($(uv --version))"
 else
   info "Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --no-modify-path
+  curl -LsSf --connect-timeout 10 https://astral.sh/uv/install.sh | sh -s -- --no-modify-path
   export PATH="$HOME/.local/bin:$PATH"
   ok "uv installed"
 fi

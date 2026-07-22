@@ -119,7 +119,7 @@ elif [[ "$OS_FAMILY" == "apt" ]]; then
     ok "1password"
   else
     info "Setting up 1Password apt repo..."
-    curl -sS https://downloads.1password.com/linux/keys/1password.asc | \
+    curl -sS --connect-timeout 10 https://downloads.1password.com/linux/keys/1password.asc | \
       sudo gpg --dearmor --output /usr/share/keyrings/1password-archive-keyring.gpg
     echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' | \
       sudo tee /etc/apt/sources.list.d/1password.list > /dev/null
@@ -135,7 +135,7 @@ elif [[ "$OS_FAMILY" == "apt" ]]; then
     sudo apt-get install -y ghostty && ok "ghostty" || info "ghostty failed"
   else
     info "ghostty not in apt repos on this release — using community packages (mkasberg/ghostty-ubuntu)..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)" && \
+    /bin/bash -c "$(curl -fsSL --connect-timeout 10 https://raw.githubusercontent.com/mkasberg/ghostty-ubuntu/HEAD/install.sh)" && \
       ok "ghostty" || info "ghostty failed"
   fi
 
@@ -189,7 +189,7 @@ if command -v brew &>/dev/null; then
   ok "already installed"
 else
   info "Installing Linuxbrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  /bin/bash -c "$(curl -fsSL --connect-timeout 10 https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ok "installed"
 fi
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -285,7 +285,7 @@ if command -v uv &>/dev/null; then
   ok "already installed ($(uv --version))"
 else
   info "Installing uv..."
-  curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --no-modify-path
+  curl -LsSf --connect-timeout 10 https://astral.sh/uv/install.sh | sh -s -- --no-modify-path
   export PATH="$HOME/.local/bin:$PATH"
   ok "uv installed"
 fi
@@ -306,8 +306,8 @@ if [[ -d "$NVM_DIR" ]]; then
   ok "already installed ($NVM_DIR)"
 else
   info "Installing NVM (latest) to $NVM_DIR..."
-  LATEST_NVM=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-  curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM}/install.sh" | bash
+  LATEST_NVM=$(curl -s --connect-timeout 10 https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+  curl --connect-timeout 10 -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM}/install.sh" | bash
   ok "installed ($LATEST_NVM)"
 fi
 

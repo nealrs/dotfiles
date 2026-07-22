@@ -58,7 +58,7 @@ if command -v brew &>/dev/null; then
   ok "already installed"
 else
   info "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  /bin/bash -c "$(curl -fsSL --connect-timeout 10 https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   ok "installed"
 fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -189,8 +189,8 @@ if [[ -d "$HOME/.nvm" ]]; then
   ok "already installed"
 else
   info "Installing NVM (latest)..."
-  LATEST_NVM=$(curl -s https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-  curl -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM}/install.sh" | bash
+  LATEST_NVM=$(curl -s --connect-timeout 10 https://api.github.com/repos/nvm-sh/nvm/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+  curl --connect-timeout 10 -o- "https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST_NVM}/install.sh" | bash
   ok "installed ($LATEST_NVM)"
 fi
 
