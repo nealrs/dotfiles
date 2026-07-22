@@ -8,9 +8,11 @@
 # NVM: https://github.com/nvm-sh/nvm  (NVM_DIR: ~/.config/nvm)
 # fzf shell integration: /usr/share/fzf/shell/key-bindings.zsh (system package)
 # bazzite bling: /usr/share/bazzite-cli/bling.sh (eza aliases, atuin, zoxide)
+# s3fs-fuse (package manager or linuxbrew)   # for s3up/s3down
 #
 # Local files:
 #   dotfiles/motivation.md — one quote per line (- item), loaded by mo()
+#   ~/.aws/credentials — used by s3up (profile=default, override with $S3_PROFILE)
 #   ~/.ssh/id_ed25519  — SSH key, added to agent on startup
 #   ~/repos/dotfiles/ascii_art.sh — ASCII art functions (gibson, etc.)
 #   ~/repos/dotfiles/rename.sh  — script to normalize names/dates of markdown, txt, and PDF files
@@ -270,6 +272,58 @@ function mo(){
   local things=("${(@f)$(grep '^- ' "$_f" | sed 's/^- //')}")
   local idx=$(( RANDOM % ${#things[@]} + 1 ))
   printf "\nBro, ${things[$idx]}.\n"
+}
+
+# ============================================================
+# FUNCTIONS — s3
+# ============================================================
+# Requires s3fs (s3fs-fuse package) and a profile in ~/.aws/credentials — no
+# separate .passwd-s3fs file needed, s3fs reads the AWS CLI credentials file
+# directly via -o profile=. Override the profile with $S3_PROFILE if not "default".
+function s3up(){
+  local bucket="$1"
+  local mnt="${2:-$HOME/s3/$bucket}"
+  if [[ -z "$bucket" ]]; then
+    echo "usage: s3up <bucket> [mountpoint]   (default mountpoint: ~/s3/<bucket>)" >&2
+    return 1
+  fi
+  mkdir -p "$mnt"
+  s3fs "$bucket" "$mnt" \
+    -o profile="${S3_PROFILE:-default}" \
+    -o url=https://s3.amazonaws.com \
+    -o use_path_request_style \
+    && echo "mounted s3://$bucket -> $mnt"
+}
+
+function s3down(){
+  local target="$1"
+  if [[ -z "$target" ]]; then
+    echo "usage: s3down <bucket-or-mountpoint>" >&2
+    return 1
+  fi
+  local mnt="$target"
+  [[ "$target" != */* ]] && mnt="$HOME/s3/$target"
+  # try a clean unmount first; only lazy-unmount if something still has it busy.
+  fusermount -u "$mnt" 2>/dev/null || fusermount -uz "$mnt" \
+    && echo "unmounted $mnt"
+}
+
+# toggle: mounts if not connected, or offers to disconnect if it already is —
+# so you don't have to remember whether s3up or s3down is the one you need.
+function s3(){
+  local bucket="$1"
+  local mnt="${2:-$HOME/s3/$bucket}"
+  if [[ -z "$bucket" ]]; then
+    echo "usage: s3 <bucket> [mountpoint]   (toggles: mounts, or offers to unmount if already connected)" >&2
+    return 1
+  fi
+  if mount | grep -qF " on ${mnt} "; then
+    read -q "REPLY?s3://$bucket is mounted at $mnt — disconnect? [y/N] "
+    echo
+    [[ "$REPLY" == [Yy] ]] && s3down "$mnt"
+  else
+    s3up "$bucket" "$mnt"
+  fi
 }
 
 # ============================================================

@@ -39,6 +39,9 @@ func_desc=(
   mo              "random line from motivation.md"
   hi              "login banner: ascii art + health + net + weather + mo"
   updatedotfiles  "git pull, regen ssh config + claude settings, re-source zshrc"
+  s3              "mount/unmount toggle: connects if not mounted, asks to disconnect if it is"
+  s3up            "mount an S3 bucket via s3fs (reads ~/.aws/credentials, no passwd file)"
+  s3down          "unmount an s3up mount (bucket name or full path), force/lazy if busy"
 )
 
 # Same idea for aliases whose expansion doesn't explain itself (points at a script,
