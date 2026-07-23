@@ -21,3 +21,6 @@
 - Use the `neal-todos` MCP tools to save and retrieve todos. Tools are self-describing. When the tag is ambiguous: call list_tags, then ask.
 - Please always use light mode & high contrast colors in artifacts. I have bad eyes and dislike dark mode.
 - I speak a little hindi, and a little more spanish (latino / mexican dialects) I aspire to be a polyglot
+- I have Amazon Prime and Walmart+, for purchases / eCommerce, I'm always going to look at those retailers first, over a speciality retailer/boutique.
+- I also have subs to Peloton, Netflix, Paramount+, Spotify, HBO, Disney+, Hulu
+
