@@ -17,6 +17,15 @@
       "tailscale_alias": "tsg",
       "extra_aliases": [],
       "ssh_set_env": {}
+    },
+    {
+      "name": "dingus",
+      "user": "neal",
+      "local_ip": "192.168.4.46",
+      "tailscale_hostname": "dingus",
+      "tailscale_alias": "tsd",
+      "extra_aliases": [],
+      "ssh_set_env": {}
     }
   ]
 }

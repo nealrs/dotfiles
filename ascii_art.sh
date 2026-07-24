@@ -65,6 +65,24 @@ function banner_goober(){
   echo "\e[32m ▀▀▀                                \e[0m";
 }
 
+#https://patorjk.com/software/taag/#p=display&f=Future+Smooth&t=ibanez&x=none&v=4&h=4&w=80&we=false
+function banner_ibanez(){
+  echo "\e[32m╷╭╮ ╭─╮╭╮╷╭─╴╶─╮\e[0m";
+  echo "\e[32m│├┴╮├─┤│╰┤├╴ ╭─╯\e[0m";
+  echo "\e[32m╵╰─╯╵ ╵╵ ╵╰─╴╰─╴\e[0m";
+
+  #echo "\e[32m╻┏┓ ┏━┓┏┓╻┏━╸╺━┓\e[0m";
+  #echo "\e[32m┃┣┻┓┣━┫┃┗┫┣╸ ┏━┛\e[0m";
+  #echo "\e[32m╹┗━┛╹ ╹╹ ╹┗━╸┗━╸\e[0m";
+}
+
+function banner_dingus(){
+  echo "\e[32m▗▄▄▄  ▗▄▄▄▖▗▖  ▗▖ ▗▄▄▖▗▖ ▗▖ ▗▄▄▖\e[0m";
+  echo "\e[32m▐▌  █   █  ▐▛▚▖▐▌▐▌   ▐▌ ▐▌▐▌   \e[0m";
+  echo "\e[32m▐▌  █   █  ▐▌ ▝▜▌▐▌▝▜▌▐▌ ▐▌ ▝▀▚▖\e[0m";
+  echo "\e[32m▐▙▄▄▀ ▗▄█▄▖▐▌  ▐▌▝▚▄▞▘▝▚▄▞▘▗▄▄▞▘\e[0m";                                
+}
+
 function avatar(){
   echo "\e[32m                                     ***                  \e[0m";
   echo "\e[32m                         ************* ***                \e[0m";
