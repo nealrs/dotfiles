@@ -167,6 +167,7 @@ alias uvpy="uv python"
 [[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/.machines.json"
 
 # Tailscale
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 alias ts-status="tailscale status"
 alias ts-up="tailscale up"
 alias ts-down="tailscale down"
