@@ -1,12 +1,12 @@
 #!/usr/bin/env zsh
-# machines.sh — generates ssh aliases from .machines.json (kewtie, gibson, etc.)
+# machines.sh — generates ssh aliases from machines.json (kewtie, gibson, etc.)
 # Source from .zshrc.mac / .zshrc.linux with the json path as $1:
-#   [[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/.machines.json"
-# Edit .machines.json to add/rename hosts — never hardcode IPs in zshrc files.
+#   [[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/machines.json"
+# Edit machines.json to add/rename hosts — never hardcode IPs in zshrc files.
 #
 # Aliases target the <name>-lan / <name>-tailnet Host entries that
 # gen_ssh_config.sh writes to ~/.ssh/config (run: genssh). User/HostName/
-# SetEnv live there, not here — run genssh after editing .machines.json.
+# SetEnv live there, not here — run genssh after editing machines.json.
 
 _MACHINES_JSON="$1"
 
@@ -32,7 +32,7 @@ PY
 )"
 fi
 
-# tssh <name> — connect to any host in .machines.json by name via tailscale
+# tssh <name> — connect to any host in machines.json by name via tailscale
 tssh() {
   local host="$1"
   [[ -n "$host" ]] || { echo "usage: tssh <hostname>" >&2; return 1 }

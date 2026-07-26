@@ -85,7 +85,7 @@ function updatedots(){
   ok()   { echo "  ✓  $1"; }
   info() { echo "  →  $1"; }
   DOTFILES="$REPOS/dotfiles"
-  source "$DOTFILES/claude_settings.sh"
+  source "$DOTFILES/claude/claude_settings.sh"
   unset -f ok info inject_todo_token
   unset DOTFILES OLD_TOKEN TOKEN
   source ~/.zshrc
@@ -164,7 +164,7 @@ alias uvpy="uv python"
 # ============================================================
 # ALIASES — ssh / places
 # ============================================================
-[[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/.machines.json"
+[[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/machines.json"
 
 # Tailscale
 alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"

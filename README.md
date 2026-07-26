@@ -4,7 +4,7 @@ Personal shell environment, machine bootstrap, and cross-machine SSH trust for N
 
 - a shared zsh config (aliases, functions, prompt, tool wiring) with a per-platform variant for Mac and Linux (Bazzite/Fedora, Ubuntu/Debian), built for parity — the same alias/function surface on both, branching only where the OS actually forces it
 - one-shot bootstrap scripts that take a fresh machine to "fully set up", converging toward one generic script per OS (`mac_bootstrap.sh`, `linux_bootstrap.sh`) rather than per-machine scripts
-- a single source of truth for known machines (`.machines.json`) that generates both `~/.ssh/config` and SSH-alias shell aliases
+- a single source of truth for known machines (`machines.json`) that generates both `~/.ssh/config` and SSH-alias shell aliases
 - passwordless SSH between machines, and the snippet to set it up
 - a shared system health check (`health.sh`) with the same output shape on Mac and Linux
 - Claude Code settings, rendered from a template so the one live secret (an MCP token) never touches the repo
@@ -15,13 +15,13 @@ Repo is **public** (`github.com/nealrs/dotfiles`) — see [Data & secrets](#data
 
 | Machine | OS | Profile | Status | SSH target? |
 | --- | --- | --- | --- | --- |
-| gibson | Bazzite (Fedora) | `linux_bootstrap.sh` + `.zshrc.linux` | done | yes — in `.machines.json` |
-| kewtie | Ubuntu 22.04 (home server, headless, SSH-only) | `linux_bootstrap.sh` + `.zshrc.linux`, rolled out by hand | **not yet migrated** — currently plain bash. Design doc: `ubuntu.prd.md`. kewtie is production home infra (Home Assistant, AdGuard DNS, etc.), so this profile gets rolled out step-by-step, never by running the script unattended. | yes — in `.machines.json` |
+| gibson | Bazzite (Fedora) | `linux_bootstrap.sh` + `.zshrc.linux` | done | yes — in `machines.json` |
+| kewtie | Ubuntu 22.04 (home server, headless, SSH-only) | `linux_bootstrap.sh` + `.zshrc.linux`, rolled out by hand | **not yet migrated** — currently plain bash. Design doc: `ubuntu.prd.md`. kewtie is production home infra (Home Assistant, AdGuard DNS, etc.), so this profile gets rolled out step-by-step, never by running the script unattended. | yes — in `machines.json` |
 | Macs | macOS | `mac_bootstrap.sh` + `.zshrc.mac` | done | **no** |
 
-Macs get the same shell/tool setup as everything else, but they aren't SSH *targets* — nobody dials into a laptop. `.machines.json` is specifically the registry of SSH-reachable boxes (headless servers like gibson and kewtie), so Macs don't get an entry there and never appear in generated `~/.ssh/config` `Host` blocks. A Mac still runs `print_ssh_trust.sh`/`sshtrust` so it can reach gibson/kewtie without a password — that direction is one-way.
+Macs get the same shell/tool setup as everything else, but they aren't SSH *targets* — nobody dials into a laptop. `machines.json` is specifically the registry of SSH-reachable boxes (headless servers like gibson and kewtie), so Macs don't get an entry there and never appear in generated `~/.ssh/config` `Host` blocks. A Mac still runs `print_ssh_trust.sh`/`sshtrust` so it can reach gibson/kewtie without a password — that direction is one-way.
 
-Every machine still gets a `~/.hostname` written during bootstrap (e.g. `kewtie`, `gibson`, or whatever you name a given Mac) — that's what selects its `banner_<name>` in `ascii_art.sh` at login. For SSH-target machines, that same name is also the key in `.machines.json`.
+Every machine still gets a `~/.hostname` written during bootstrap (e.g. `kewtie`, `gibson`, or whatever you name a given Mac) — that's what selects its `banner_<name>` in `ascii_art.sh` at login. For SSH-target machines, that same name is also the key in `machines.json`.
 
 ## Configuring a new machine
 
@@ -47,17 +47,17 @@ One script, both distro families — it detects `rpm-ostree` vs `apt-get` and on
 
 Finish with: log out/in (or `exec $ZSH_PATH`) to pick up zsh, `source ~/.zshrc`, run the `ssh-copy-id` commands it printed.
 
-**kewtie is the exception** — it's a production, SSH-only home server with no console fallback, so `linux_bootstrap.sh` is never run on it unattended. See `ubuntu.prd.md` for why, and `kewtie_bootstrap.sh` for the hand-walked, step-by-step equivalent (same end state, run and verified one section at a time, no `chsh`).
+**kewtie is the exception** — it's a production, SSH-only home server with no console fallback, so `linux_bootstrap.sh` is never run on it unattended. See `ubuntu.prd.md` for why, and `one-offs/kewtie_bootstrap.sh` for the hand-walked, step-by-step equivalent (same end state, run and verified one section at a time, no `chsh`).
 
 ### Adding a new SSH target (a new headless/server box)
 
 1. Bootstrap it (above) — this generates its own SSH keypair.
-2. Add an entry for it to `.machines.json` (name, user, `local_ip` if it has one, `tailscale_hostname`, `tailscale_alias`, `ssh_set_env`).
+2. Add an entry for it to `machines.json` (name, user, `local_ip` if it has one, `tailscale_hostname`, `tailscale_alias`, `ssh_set_env`).
 3. On every machine that should reach it (including Macs), run `updatedots` (pulls the repo, regenerates `~/.ssh/config`) so it knows the new `Host` aliases, then `sshtrust` to get the `ssh-copy-id` command for the new target.
 
 ### Adding a new Mac (or any non-target machine)
 
-Just bootstrap it (above) and run `sshtrust` on it — no `.machines.json` entry needed, since nothing will ever need to SSH *into* it. `sshtrust` already lists every current SSH target to authorize against.
+Just bootstrap it (above) and run `sshtrust` on it — no `machines.json` entry needed, since nothing will ever need to SSH *into* it. `sshtrust` already lists every current SSH target to authorize against.
 
 Either way, this is still O(n) manual `ssh-copy-id` runs per new machine, not automatic — see `print_ssh_trust.sh` below if that ever becomes worth automating further.
 
@@ -84,7 +84,7 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 
 **Python (uv)** — `py` (`uv run python`), `pip`→`uv pip`, `uvr`/`uva`/`uvs`/`uvi`/`uvpy` (run/add/sync/init/python).
 
-**SSH / machines** — generated per host in `.machines.json` by `machines.sh`: for each host with a `local_ip`, an alias named after it (e.g. `kewtie` → `ssh kewtie-lan`); for each host with a `tailscale_alias`, that alias (e.g. `tsk` → `ssh kewtie-tailnet`, `tsg` → `ssh gibson-tailnet`); plus any `extra_aliases`. `tssh <name>` connects to any host by name over Tailscale. `genssh` regenerates `~/.ssh/config` from `.machines.json` + `ssh_config.base`. `sshtrust` prints the `ssh-copy-id` commands to authorize this machine on every other one. `ts`/`ts-status`/`ts-up`/`ts-down` (Tailscale).
+**SSH / machines** — generated per host in `machines.json` by `machines.sh`: for each host with a `local_ip`, an alias named after it (e.g. `kewtie` → `ssh kewtie-lan`); for each host with a `tailscale_alias`, that alias (e.g. `tsk` → `ssh kewtie-tailnet`, `tsg` → `ssh gibson-tailnet`); plus any `extra_aliases`. `tssh <name>` connects to any host by name over Tailscale. `genssh` regenerates `~/.ssh/config` from `machines.json` + `ssh_config.base`. `sshtrust` prints the `ssh-copy-id` commands to authorize this machine on every other one. `ts`/`ts-status`/`ts-up`/`ts-down` (Tailscale).
 
 **`updatedots`** — `git pull` on the repo, `genssh`, re-renders `~/.claude/settings.json` via `op inject` (skips with a message if 1Password CLI isn't installed/signed in), then re-sources `~/.zshrc`.
 
@@ -93,8 +93,8 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 ## Data & secrets
 
 - **Private SSH keys never live in this repo.** Each machine generates its own keypair during bootstrap (`ssh-keygen`, prompted, skippable). Trust between machines is one-directional-per-pair and set up by copying a *public* key straight to the target's `~/.ssh/authorized_keys` via `ssh-copy-id` (see `print_ssh_trust.sh`) — nothing key-related is ever committed.
-- **`.machines.json`** has hostnames, usernames, LAN IPs (RFC1918, only reachable from inside the home network), and Tailscale hostnames/aliases. None of this is a credential, but it's real topology about home infrastructure in a public repo — don't add anything more sensitive than that here (no tokens, no passwords, no public IPs of anything you don't want indexed).
-- **`claude_settings.json.tpl`** contains a 1Password *reference* (`op://Private/to-do-mcp/token`), not a secret — `op inject` resolves it locally at render time (via `updatedots` or bootstrap) into `~/.claude/settings.json`, which is never written back into the repo. Rendering silently no-ops (with a message) if the `op` CLI isn't installed or you're not signed in.
+- **`machines.json`** has hostnames, usernames, LAN IPs (RFC1918, only reachable from inside the home network), and Tailscale hostnames/aliases. None of this is a credential, but it's real topology about home infrastructure in a public repo — don't add anything more sensitive than that here (no tokens, no passwords, no public IPs of anything you don't want indexed).
+- **`claude/claude_settings.json.tpl`** contains a 1Password *reference* (`op://Private/to-do-mcp/token`), not a secret — `op inject` resolves it locally at render time (via `updatedots` or bootstrap) into `~/.claude/settings.json`, which is never written back into the repo. Rendering silently no-ops (with a message) if the `op` CLI isn't installed or you're not signed in.
 - **`.gitignore` only excludes OS noise (`.DS_Store`)** — nothing generated (rendered configs, keys, `~/.ssh/config`) is ever written inside the repo in the first place, it's all written to `$HOME` or `~/.ssh`/`~/.config`. Keep it that way: anything this repo writes should land outside the repo, not get committed.
 - **`q11.json`** is an unrelated keyboard (QMK/VIA) config backup — not read by any script here, just parked in the repo for safekeeping.
 
@@ -102,18 +102,17 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 
 | File | Purpose | Symlinked / rendered to |
 | --- | --- | --- |
-| `.machines.json` | Source of truth for known **SSH-target** machines (headless servers like gibson/kewtie — not Macs): name, SSH user, LAN IP, Tailscale hostname/alias, extra aliases, per-host `SetEnv`. Edit this to add/rename/remove an SSH target — never hardcode a host's IP anywhere else. | — (read by `gen_ssh_config.sh`, `machines.sh`, `print_ssh_trust.sh`) |
+| `machines.json` | Source of truth for known **SSH-target** machines (headless servers like gibson/kewtie — not Macs): name, SSH user, LAN IP, Tailscale hostname/alias, extra aliases, per-host `SetEnv`. Edit this to add/rename/remove an SSH target — never hardcode a host's IP anywhere else. | — (read by `gen_ssh_config.sh`, `machines.sh`, `print_ssh_trust.sh`) |
 | `ssh_config.base` | Static SSH config appended after the generated per-host blocks — currently just the `github.com` / `UseKeychain` stanza (macOS-only; stripped on Linux — see comment in the file for why `IgnoreUnknown` must be global, not host-scoped). | folded into `~/.ssh/config` |
-| `gen_ssh_config.sh` | Generates `~/.ssh/config` from `.machines.json` (`<name>-lan` / `<name>-tailnet` `Host` blocks) + `ssh_config.base`. Strips macOS-only directives when run on non-Darwin. Run via `genssh`. | writes `~/.ssh/config` |
-| `print_ssh_trust.sh` | Prints `ssh-copy-id` commands to authorize this machine's public key on every *other* machine in `.machines.json`. Run via `sshtrust`, also run once at the end of bootstrap. | — (prints only, does not run ssh-copy-id itself) |
-| `machines.sh` | Generates the per-host shell aliases (`kewtie`, `tsk`, `tsg`, ...) and the `tssh` function from `.machines.json`. Sourced by both zshrc files. | — |
+| `gen_ssh_config.sh` | Generates `~/.ssh/config` from `machines.json` (`<name>-lan` / `<name>-tailnet` `Host` blocks) + `ssh_config.base`. Strips macOS-only directives when run on non-Darwin. Run via `genssh`. | writes `~/.ssh/config` |
+| `print_ssh_trust.sh` | Prints `ssh-copy-id` commands to authorize this machine's public key on every *other* machine in `machines.json`. Run via `sshtrust`, also run once at the end of bootstrap. | — (prints only, does not run ssh-copy-id itself) |
+| `machines.sh` | Generates the per-host shell aliases (`kewtie`, `tsk`, `tsg`, ...) and the `tssh` function from `machines.json`. Sourced by both zshrc files. | — |
 | `ssh_agent_init.sh` | Starts (or reconnects to) a persistent ssh-agent so the SSH key passphrase is asked once per agent lifetime, not once per shell. POSIX-compatible — sourced by `.zshrc.linux`; sourceable from `~/.profile` on Linux boxes that still use bash as the login shell (see header comment) so `git pull`/`push` stop prompting too. | — |
 | `mac_bootstrap.sh` | One-shot Mac setup: Xcode CLI tools, Homebrew + packages/casks/MAS apps, NVM/Node/pnpm, SSH keys, git config, clones the repo, symlinks dotfiles, generates `~/.ssh/config`, prints SSH trust snippet. | — |
-| `linux_bootstrap.sh` | Same shape, for any Linux box: detects `rpm-ostree` (Bazzite/Fedora) vs `apt-get` (Ubuntu/Debian) and branches only for 1Password/Ghostty/Deskflow install method; also asks desktop vs. headless server and skips GUI-only steps (1Password app, Ghostty, Deskflow, Flatpak Slack/LocalSend, `chsh`) on headless boxes. Installs Podman (not Docker) as the container runtime for new boxes. Linuxbrew + packages, NVM/Node/pnpm, uv/Python, SSH keys, git config, symlinks, `~/.ssh/config`, SSH trust snippet. Not run unattended on kewtie — see `kewtie_bootstrap.sh`. | — |
-| `kewtie_bootstrap.sh` | Hand-walked equivalent of `linux_bootstrap.sh` for kewtie specifically: same end state, split into independently-runnable, idempotent sections with no `chsh` and no step that touches Docker/systemd/ports. Read `ubuntu.prd.md` for why. | — |
+| `linux_bootstrap.sh` | Same shape, for any Linux box: detects `rpm-ostree` (Bazzite/Fedora) vs `apt-get` (Ubuntu/Debian) and branches only for 1Password/Ghostty/Deskflow install method; also asks desktop vs. headless server and skips GUI-only steps (1Password app, Ghostty, Deskflow, Flatpak Slack/LocalSend, `chsh`) on headless boxes. Installs Podman (not Docker) as the container runtime for new boxes. Linuxbrew + packages, NVM/Node/pnpm, uv/Python, SSH keys, git config, symlinks, `~/.ssh/config`, SSH trust snippet. Not run unattended on kewtie — see `one-offs/kewtie_bootstrap.sh`. | — |
 | `ubuntu.prd.md` | Design doc for the Ubuntu/kewtie profile, written against kewtie's current state — the rollout constraints, and why kewtie gets the manual script instead of `linux_bootstrap.sh` directly. | — |
 | `health.sh` | Quick system health snapshot (CPU load/temp/fan, memory, disk free) using native OS commands (`sysctl`/`vm_stat` on Mac, `/proc`/`sensors` on Linux) directly, rather than shelling out to another tool. Run via `health`. | — |
-| `cmds.sh` | Color-coded cheat sheet of every alias/function this repo defines: parses the `# ALIASES — x` / `# FUNCTIONS — x` section banners out of the active zshrc (picked by `uname`, same file symlinked to `~/.zshrc`) plus the SSH aliases `machines.sh` generates from `.machines.json` — nothing to keep in sync by hand except a few one-line function descriptions. Run via `h`. | — |
+| `cmds.sh` | Color-coded cheat sheet of every alias/function this repo defines: parses the `# ALIASES — x` / `# FUNCTIONS — x` section banners out of the active zshrc (picked by `uname`, same file symlinked to `~/.zshrc`) plus the SSH aliases `machines.sh` generates from `machines.json` — nothing to keep in sync by hand except a few one-line function descriptions. Run via `h`. | — |
 | `.zshrc.mac` | zsh config for Mac machines. | `~/.zshrc` (Mac) |
 | `.zshrc.linux` | zsh config for Linux machines (Bazzite/Fedora, Ubuntu/Debian). | `~/.zshrc` (Linux) |
 | `motivation.md` | One quote per `- line`, read by `mo()` directly from the repo. Auto-downloaded from GitHub raw into the repo if missing on a machine that skipped bootstrap. | — |
@@ -124,10 +123,14 @@ Shared between `.zshrc.mac` and `.zshrc.linux` unless noted. Full source is the 
 | `ghostty.linux.config` | Ghostty config for Linux: same shared appearance as the Mac file, plus ctrl+c/ctrl+v copy-paste (no Cmd key on Linux). | `~/.config/ghostty/config` (Linux) |
 | `ascii_art.sh` | `banner_<name>` functions (one per machine, e.g. `banner_kewtie`, `banner_gibson`), sourced by `hi()` at shell startup. Auto-downloaded from GitHub raw if missing. | sourced, not symlinked |
 | `rename.sh` | Standalone file-renaming utility (normalizes markdown/txt/PDF/image filenames to `YYYY-MM-DD-kebab-case.ext`). Invoked via the `rn` function, which locates it under `~/repos/dotfiles` or `~/Documents/repos/dotfiles`. | invoked directly, not symlinked |
-| `claude_settings.json.tpl` | Template for Claude Code settings (MCP servers, permission allow/deny lists) with a 1Password secret reference. Rendered via `op inject` in `updatedots`/bootstrap. | renders to `~/.claude/settings.json` (not committed) |
 | `q11.json` | Keyboard config backup, unrelated to shell setup. | — |
-| `fusion_drive.sh` | One-off aliases (`diskcheck`, `nofusion`) for a specific dying HDD on an iMac 2019 Fusion Drive — not sourced by any zshrc, not part of the general machine setup. | — |
-| `kewtie_headless.sh` | One-off aliases (`gdmcheck`, `gdmoff`/`gdmon`, `gdmstop`/`gdmstart`, `gdmverify`) to boot kewtie without gdm3/X/Wayland, since it's SSH-only in practice. Independent of Docker and SSH (separate systemd targets/logind seat) — not sourced by any zshrc, not part of the general machine setup. | — |
+| `claude/CLAUDE.md` | Claude Code global instructions (role, communication style, technical background). Symlinked by `claude/claude_settings.sh`. | `~/.claude/CLAUDE.md` |
+| `claude/claude_settings.sh` | Writes `~/.claude/settings.json` from `claude_settings.json.tpl`, injects the neal-todo MCP token via 1Password (preserving the old token if `op` isn't signed in), then symlinks `CLAUDE.md`. Sourced by `mac_bootstrap.sh`/`linux_bootstrap.sh`/`updatedots` — expects `$DOTFILES` and `ok`/`info` helpers already defined by the caller. | — |
+| `claude/claude_settings.json.tpl` | Template for Claude Code settings (MCP servers, permission allow/deny lists) with a 1Password secret reference. Rendered via `op inject`/`cp` in `updatedots`/bootstrap. | renders to `~/.claude/settings.json` (not committed) |
+| `one-offs/kewtie_bootstrap.sh` | Hand-walked equivalent of `linux_bootstrap.sh` for kewtie specifically: same end state, split into independently-runnable, idempotent sections with no `chsh` and no step that touches Docker/systemd/ports. Read `ubuntu.prd.md` for why. | — |
+| `one-offs/kewtie_upgrade_runbook.md` | Planned, interactive-only runbook for kewtie's next `apt upgrade` + reboot + bash→zsh shell switch — bundles two risk-bearing operations into one supervised window instead of doing them piecemeal. | — |
+| `one-offs/kewtie_headless.sh` | One-off aliases (`gdmcheck`, `gdmoff`/`gdmon`, `gdmstop`/`gdmstart`, `gdmverify`) to boot kewtie without gdm3/X/Wayland, since it's SSH-only in practice. Independent of Docker and SSH (separate systemd targets/logind seat) — not sourced by any zshrc, not part of the general machine setup. | — |
+| `one-offs/fusion_drive.sh` | One-off aliases (`diskcheck`, `nofusion`) for a specific dying HDD on an iMac 2019 Fusion Drive — not sourced by any zshrc, not part of the general machine setup. | — |
 
 ## `$REPOS` resolution
 

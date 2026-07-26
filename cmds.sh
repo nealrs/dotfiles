@@ -4,7 +4,7 @@
 # it's the same file that actually got symlinked to ~/.zshrc on this box) — there's no
 # separate list to keep in sync, add a new "# ALIASES — foo" / "# FUNCTIONS — foo"
 # banner in the zshrc and it shows up here for free. Also merges in the SSH aliases
-# machines.sh generates from .machines.json, since those don't exist as literal text.
+# machines.sh generates from machines.json, since those don't exist as literal text.
 # Run via `h`.
 
 REPOS="${REPOS:-$HOME/repos}"
@@ -50,7 +50,7 @@ func_desc=(
 # (e.g. gs="git status" doesn't need translating).
 typeset -A alias_desc
 alias_desc=(
-  genssh      "regenerate ~/.ssh/config from .machines.json + ssh_config.base"
+  genssh      "regenerate ~/.ssh/config from machines.json + ssh_config.base"
   sshtrust    "print the ssh-copy-id commands to authorize this machine on every other known host"
   health      "CPU load/temp, memory, disk free — quick health snapshot"
   psg         "search running processes by name"
@@ -141,12 +141,12 @@ while IFS= read -r line; do
   fi
 done < "$ZSHRC"
 
-# Merge in the SSH aliases/functions machines.sh generates from .machines.json —
+# Merge in the SSH aliases/functions machines.sh generates from machines.json —
 # they don't exist as literal `alias` lines anywhere, so the scan above can't see them.
 if [[ -f "$DOTFILES/machines.sh" ]]; then
   typeset -A pre_aliases
   pre_aliases=(${(kv)aliases})
-  source "$DOTFILES/machines.sh" "$DOTFILES/.machines.json"
+  source "$DOTFILES/machines.sh" "$DOTFILES/machines.json"
   ssh_title="ssh / places"
   if [[ -z "${items[$ssh_title]+x}" ]]; then
     order+=("$ssh_title")
@@ -156,7 +156,7 @@ if [[ -f "$DOTFILES/machines.sh" ]]; then
     [[ -n "${pre_aliases[$k]+x}" ]] && continue
     items[$ssh_title]+="alias	${k}	${aliases[$k]}"$'\n'
   done
-  [[ -n "${functions[tssh]}" ]] && items[$ssh_title]+="function	tssh	<name> — ssh to any host in .machines.json over tailscale"$'\n'
+  [[ -n "${functions[tssh]}" ]] && items[$ssh_title]+="function	tssh	<name> — ssh to any host in machines.json over tailscale"$'\n'
 fi
 
 printf "\n${BOLD}dotfiles commands${NC}  ${DIM}(%s — %s)${NC}\n" "$PLATFORM" "$ZSHRC"

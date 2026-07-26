@@ -17,7 +17,7 @@ if [[ -f ~/.claude/settings.json ]]; then
   [[ "$OLD_TOKEN" == "__TODO_MCP_TOKEN__" ]] && OLD_TOKEN=""
 fi
 
-cp "$DOTFILES/claude_settings.json.tpl" ~/.claude/settings.json && ok "~/.claude/settings.json written"
+cp "$DOTFILES/claude/claude_settings.json.tpl" ~/.claude/settings.json && ok "~/.claude/settings.json written"
 
 inject_todo_token() {
   local token="$1"
@@ -52,7 +52,7 @@ fi
 chmod 600 ~/.claude/settings.json
 
 if [[ -L ~/.claude/CLAUDE.md || ! -e ~/.claude/CLAUDE.md ]]; then
-  ln -sf "$DOTFILES/CLAUDE.md" ~/.claude/CLAUDE.md && ok "~/.claude/CLAUDE.md → dotfiles"
+  ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md && ok "~/.claude/CLAUDE.md → dotfiles"
 else
-  info "~/.claude/CLAUDE.md exists as a real file — skipping (to fix: ln -sf $DOTFILES/CLAUDE.md ~/.claude/CLAUDE.md)"
+  info "~/.claude/CLAUDE.md exists as a real file — skipping (to fix: ln -sf $DOTFILES/claude/CLAUDE.md ~/.claude/CLAUDE.md)"
 fi

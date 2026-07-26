@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # print_ssh_trust.sh — prints ssh-copy-id commands to authorize this
-# machine's public key on every other machine in .machines.json.
+# machine's public key on every other machine in machines.json.
 # Run via: sshtrust (also run once at the end of bootstrap)
 
 _dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -20,7 +20,7 @@ fi
 
 self="$(cat ~/.hostname 2>/dev/null)"
 
-python3 - "$_dir/.machines.json" "$self" "$pubkey" <<'PY'
+python3 - "$_dir/machines.json" "$self" "$pubkey" <<'PY'
 import json, sys
 
 machines_path, self_name, pubkey = sys.argv[1], sys.argv[2], sys.argv[3]
@@ -31,7 +31,7 @@ with open(machines_path) as f:
 others = [h for h in hosts if h["name"] != self_name]
 
 if not others:
-    print("No other machines in .machines.json to authorize.")
+    print("No other machines in machines.json to authorize.")
     sys.exit(0)
 
 print("Run these to let this machine SSH into the others without a password:")

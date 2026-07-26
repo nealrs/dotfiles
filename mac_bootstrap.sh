@@ -312,7 +312,7 @@ else
 fi
 
 if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
-  info "Generating ~/.ssh/config from .machines.json..."
+  info "Generating ~/.ssh/config from machines.json..."
   bash "$DOTFILES/gen_ssh_config.sh" && ok "~/.ssh/config generated"
 fi
 
@@ -326,10 +326,10 @@ fi
 
 # ============================================================
 # CLAUDE CODE SETTINGS
-# See claude_settings.sh for details (shared with linux_bootstrap.sh).
+# See claude/claude_settings.sh for details (shared with linux_bootstrap.sh).
 # ============================================================
 section "Claude Code settings"
-source "$DOTFILES/claude_settings.sh"
+source "$DOTFILES/claude/claude_settings.sh"
 
 # ============================================================
 # DONE

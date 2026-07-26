@@ -270,7 +270,7 @@ section "9. Claude Code settings"
 mkdir -p ~/.claude
 if command -v op &>/dev/null; then
   info "Rendering ~/.claude/settings.json via 1Password..."
-  op inject -i "$DOTFILES/claude_settings.json.tpl" -o ~/.claude/settings.json \
+  op inject -i "$DOTFILES/claude/claude_settings.json.tpl" -o ~/.claude/settings.json \
     && ok "~/.claude/settings.json rendered" \
     || warn "op inject failed — run 'op signin' and re-run just this section later"
 else
