@@ -379,21 +379,6 @@ section "Dotfiles"
 DOTFILES="$HOME/repos/dotfiles"
 mkdir -p "$HOME/repos"
 
-symlink_dotfile() {
-  local src="$1" dst="$2" label
-  label="$(basename "$dst")"
-  if [[ -L "$dst" ]]; then
-    ok "$label symlink exists"
-  elif [[ -e "$dst" ]]; then
-    info "$label exists as a real file — skipping (to fix: ln -sf $src $dst)"
-  elif [[ -f "$src" ]]; then
-    ln -sf "$src" "$dst"
-    ok "$label → dotfiles"
-  else
-    info "$label not in repo — skipping"
-  fi
-}
-
 if [[ -d "$DOTFILES/.git" ]]; then
   ok "dotfiles repo already cloned"
 else
@@ -402,17 +387,7 @@ else
   ok "cloned to $DOTFILES"
 fi
 
-symlink_dotfile "$DOTFILES/.zshrc.linux" ~/.zshrc
-symlink_dotfile "$DOTFILES/.nanorc.linux" ~/.nanorc
-
-mkdir -p ~/.config
-symlink_dotfile "$DOTFILES/starship.toml" ~/.config/starship.toml
-if [[ "$HEADLESS" == "1" ]]; then
-  info "Headless — skipping ghostty.linux.config, no terminal emulator to configure."
-else
-  mkdir -p ~/.config/ghostty
-  symlink_dotfile "$DOTFILES/ghostty.linux.config" ~/.config/ghostty/config
-fi
+source "$DOTFILES/symlink_dotfiles.sh"
 
 if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
   info "Generating ~/.ssh/config from machines.json..."

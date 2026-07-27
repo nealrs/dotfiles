@@ -85,8 +85,9 @@ function updatedots(){
   ok()   { echo "  ✓  $1"; }
   info() { echo "  →  $1"; }
   DOTFILES="$REPOS/dotfiles"
+  source "$DOTFILES/symlink_dotfiles.sh"
   source "$DOTFILES/claude/claude_settings.sh"
-  unset -f ok info inject_todo_token
+  unset -f ok info inject_todo_token symlink_dotfile
   unset DOTFILES OLD_TOKEN TOKEN
   source ~/.zshrc
 }

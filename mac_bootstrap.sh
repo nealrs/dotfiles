@@ -274,21 +274,6 @@ section "Dotfiles"
 DOTFILES="$HOME/repos/dotfiles"
 mkdir -p "$HOME/repos"
 
-symlink_dotfile() {
-  local src="$1" dst="$2" label
-  label="$(basename "$dst")"
-  if [[ -L "$dst" ]]; then
-    ok "$label symlink exists"
-  elif [[ -e "$dst" ]]; then
-    info "$label exists as a real file — skipping (to fix: ln -sf $src $dst)"
-  elif [[ -f "$src" ]]; then
-    ln -sf "$src" "$dst"
-    ok "$label → dotfiles"
-  else
-    info "$label not in repo — skipping"
-  fi
-}
-
 if [[ -d "$DOTFILES/.git" ]]; then
   ok "dotfiles repo already cloned"
 else
@@ -297,19 +282,7 @@ else
   ok "cloned to $DOTFILES"
 fi
 
-symlink_dotfile "$DOTFILES/.zshrc.mac" ~/.zshrc
-symlink_dotfile "$DOTFILES/.nanorc.mac" ~/.nanorc
-mkdir -p "$HOME/Library/Application Support/com.mitchellh.ghostty"
-symlink_dotfile "$DOTFILES/ghostty.mac.config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
-
-if [[ -L ~/.p10k.zsh ]]; then
-  ok ".p10k.zsh symlink exists"
-elif [[ -f "$DOTFILES/.p10k.zsh" ]]; then
-  ln -sf "$DOTFILES/.p10k.zsh" ~/.p10k.zsh
-  ok ".p10k.zsh → dotfiles"
-else
-  info ".p10k.zsh not in repo yet — run 'p10k configure' then commit $DOTFILES/.p10k.zsh"
-fi
+source "$DOTFILES/symlink_dotfiles.sh"
 
 if [[ -f "$DOTFILES/gen_ssh_config.sh" ]]; then
   info "Generating ~/.ssh/config from machines.json..."
