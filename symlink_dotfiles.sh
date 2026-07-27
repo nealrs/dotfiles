@@ -32,6 +32,9 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
   else
     info ".p10k.zsh not in repo yet — run 'p10k configure' then commit $DOTFILES/.p10k.zsh"
   fi
+
+  mkdir -p ~/.config/atuin
+  symlink_dotfile "$DOTFILES/atuin.toml" ~/.config/atuin/config.toml
 else
   symlink_dotfile "$DOTFILES/.zshrc.linux" ~/.zshrc
   symlink_dotfile "$DOTFILES/.nanorc.linux" ~/.nanorc
@@ -49,4 +52,7 @@ else
     mkdir -p ~/.config/ghostty
     symlink_dotfile "$DOTFILES/ghostty.linux.config" ~/.config/ghostty/config
   fi
+
+  mkdir -p ~/.config/atuin
+  symlink_dotfile "$DOTFILES/atuin.toml" ~/.config/atuin/config.toml
 fi

@@ -1,0 +1,14 @@
+enter_accept = false                                  # enter populates the line, second enter runs — I select to edit, not re-run verbatim. Don't "fix" to true.
+accept_past_line_end = false                          # keep right-arrow moving the cursor instead of accepting like Tab
+filter_mode = "global"                                # ctrl-r: deliberate search, all history
+filter_mode_shell_up_key_binding = "session-preload"  # up-arrow: this session + everything before it started — NOT "session" alone, empty in a fresh tmux pane
+inline_height_shell_up_key_binding = 10
+
+search_mode = "fuzzy"    # fzf syntax: ^prefix, suffix$, 'exact, !inverse
+style = "compact"
+inline_height = 20
+workspaces = true        # auto-filter to current git repo
+keymap_mode = "auto"
+
+[search]
+authors = ["$all-user"]   # exclude agent-run commands (Claude Code etc) from recall — already the default, set explicitly so intent is visible

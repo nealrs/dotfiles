@@ -74,6 +74,7 @@ PACKAGES=(
   ruby
   nano
   uv
+  atuin
   eza
   bat
   btop
