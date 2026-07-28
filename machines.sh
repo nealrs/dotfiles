@@ -29,8 +29,11 @@ for h in hosts:
     # m<name> — attach to this host's tmux session picker over tailscale.
     # The double quotes keep the tilde from expanding locally; the remote
     # shell expands it. Needs mux symlinked to ~/.local/bin/mux on the box.
+    # (Built by concatenation, not a nested f-string: f-strings can't contain
+    # backslashes before Python 3.12, and kewtie runs an older Python.)
     if h.get("tmux"):
-        print(f"alias m{name}={shlex.quote(f'ssh {name}-tailnet -t \"~/.local/bin/mux\"')}")
+        _mcmd = 'ssh ' + name + '-tailnet -t "~/.local/bin/mux"'
+        print(f"alias m{name}={shlex.quote(_mcmd)}")
 
     for extra in h.get("extra_aliases", []):
         print(f"alias {extra}={shlex.quote(f'ssh {name}-lan')}")
