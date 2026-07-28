@@ -190,17 +190,9 @@ function lan(){
   done < <(networksetup -listallhardwareports)
 }
 
-
-
 function wifi(){
   networksetup -setairportpower en0 off && sleep 5 && networksetup -setairportpower en0 on
 }
-
-# ============================================================
-# FUNCTIONS — utility
-# ============================================================
-
-
 
 # ============================================================
 # FUNCTIONS — s3
@@ -253,10 +245,6 @@ function s3(){
     s3up "$bucket" "$mnt"
   fi
 }
-
-# ============================================================
-# FUNCTIONS — startup greeting
-# ============================================================
 
 # ============================================================
 # STARTUP
