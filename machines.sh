@@ -73,7 +73,7 @@ muxall() {
   self="$(cat ~/.hostname 2>/dev/null || hostname -s 2>/dev/null)"
   printf '\n  %s✦ tmux sessions%s\n' "$A$Bd" "$Rs"
   for host in local $hosts; do
-    if [[ $host == local ]]; then label="here"; out="$(eval "$probe")"
+    if [[ $host == local ]]; then label="local"; out="$(eval "$probe")"
     elif [[ $host == $self ]]; then continue   # this box — 'here' already covers it, don't ssh to ourselves
     else label="$host"; out="$(ssh -o ConnectTimeout=2 -o BatchMode=yes "${host}-tailnet" "$probe" 2>/dev/null)"; fi
     if [[ $out != *__OK__* ]]; then
