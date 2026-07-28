@@ -15,6 +15,18 @@
 # Symlinked to ~/.local/bin/mux by symlink_dotfiles.sh — edit the repo copy.
 set -u
 
+# ---- harden the environment (mux is launched over ssh with a bare env) ----
+# ssh runs commands with a minimal PATH that often omits Homebrew/Linuxbrew, so
+# `tmux` can be missing (e.g. kewtie's brew tmux). Add the usual install dirs.
+export PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+# A C/POSIX locale makes tmux mangle multibyte glyphs (°, emoji, box art) to '_'
+# (e.g. gibson, whose shells have an empty locale). Force a UTF-8 locale if none
+# is active — this sets the locale the tmux SERVER inherits, which is what counts.
+case "${LC_ALL:-}${LC_CTYPE:-}${LANG:-}" in
+  *[Uu][Tt][Ff]*) : ;;              # already UTF-8 — leave it
+  *) export LANG=C.UTF-8 ;;
+esac
+
 # ---- palette (only colorize when writing to a terminal) ----
 if [[ -t 1 ]]; then
   A=$'\e[38;5;209m'      # accent (warm Claude orange)

@@ -68,7 +68,8 @@ muxall() {
   local A=$'\e[38;5;209m' D=$'\e[38;5;245m' Bd=$'\e[1m' Rs=$'\e[0m'
   # sessions + windows from list-sessions; panes from list-panes -a. One round
   # trip per host; __SEP__/__OK__ delimit the two counts and prove reachability.
-  local probe='tmux list-sessions -F "#{session_windows}" 2>/dev/null; echo __SEP__; tmux list-panes -a 2>/dev/null | grep -c .; echo __OK__'
+  # PATH prefix so a remote box's brew tmux is found under ssh's minimal PATH.
+  local probe='export PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"; tmux list-sessions -F "#{session_windows}" 2>/dev/null; echo __SEP__; tmux list-panes -a 2>/dev/null | grep -c .; echo __OK__'
   local host label out wins np ns nw self
   self="$(cat ~/.hostname 2>/dev/null || hostname -s 2>/dev/null)"
   printf '\n  %s✦ tmux sessions%s\n' "$A$Bd" "$Rs"
