@@ -69,10 +69,12 @@ muxall() {
   # sessions + windows from list-sessions; panes from list-panes -a. One round
   # trip per host; __SEP__/__OK__ delimit the two counts and prove reachability.
   local probe='tmux list-sessions -F "#{session_windows}" 2>/dev/null; echo __SEP__; tmux list-panes -a 2>/dev/null | grep -c .; echo __OK__'
-  local host label out wins np ns nw
+  local host label out wins np ns nw self
+  self="$(cat ~/.hostname 2>/dev/null || hostname -s 2>/dev/null)"
   printf '\n  %s✦ tmux sessions%s\n' "$A$Bd" "$Rs"
   for host in local $hosts; do
     if [[ $host == local ]]; then label="here"; out="$(eval "$probe")"
+    elif [[ $host == $self ]]; then continue   # this box — 'here' already covers it, don't ssh to ourselves
     else label="$host"; out="$(ssh -o ConnectTimeout=2 -o BatchMode=yes "${host}-tailnet" "$probe" 2>/dev/null)"; fi
     if [[ $out != *__OK__* ]]; then
       printf '    %s%-10s%s %soffline / unreachable%s\n' "$A" "$label" "$Rs" "$D" "$Rs"; continue
