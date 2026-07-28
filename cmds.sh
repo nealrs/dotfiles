@@ -139,7 +139,7 @@ while IFS= read -r line; do
     name="${match[1]}"
     items[$title]+="function	${name}	${func_desc[$name]}"$'\n'
   fi
-done < "$ZSHRC"
+done < <(cat "$ZSHRC" "$DOTFILES/shell_common.sh" 2>/dev/null)
 
 # Merge in the SSH aliases/functions machines.sh generates from machines.json —
 # they don't exist as literal `alias` lines anywhere, so the scan above can't see them.

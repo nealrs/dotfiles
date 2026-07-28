@@ -184,6 +184,7 @@ alias uvpy="uv python"
 # ALIASES — ssh / places
 # ============================================================
 [[ -f "$REPOS/dotfiles/machines.sh" ]] && source "$REPOS/dotfiles/machines.sh" "$REPOS/dotfiles/machines.json"
+[[ -f "$REPOS/dotfiles/shell_common.sh" ]] && source "$REPOS/dotfiles/shell_common.sh"
 
 # Tailscale
 alias ts-status="tailscale status"
@@ -199,17 +200,6 @@ alias dots="cd $REPOS/dotfiles"
 alias h="zsh $REPOS/dotfiles/cmds.sh"
 
 unalias updatedots 2>/dev/null
-function updatedots(){
-  git -C "$REPOS/dotfiles" pull && genssh
-  ok()   { echo "  ✓  $1"; }
-  info() { echo "  →  $1"; }
-  DOTFILES="$REPOS/dotfiles"
-  source "$DOTFILES/symlink_dotfiles.sh"
-  source "$DOTFILES/claude/claude_settings.sh"
-  unset -f ok info inject_todo_token symlink_dotfile
-  unset DOTFILES OLD_TOKEN TOKEN
-  source ~/.zshrc
-}
 alias path='echo $PATH | tr ":" "\n"'
 alias json="python3 -m json.tool"
 alias psg="ps aux | grep"
@@ -217,15 +207,6 @@ alias psg="ps aux | grep"
 # ============================================================
 # FUNCTIONS — network
 # ============================================================
-function wan(){
-  local data=$(curl -s --max-time 3 https://ipinfo.io/json)
-  local ip6=$(curl -s --max-time 3 https://api64.ipify.org)
-  local ip=$(echo $data | grep -o '"ip": *"[^"]*"' | cut -d'"' -f4)
-  local city=$(echo $data | grep -o '"city": *"[^"]*"' | cut -d'"' -f4)
-  local country=$(echo $data | grep -o '"country": *"[^"]*"' | cut -d'"' -f4)
-  printf "IPv4: \e[33m$ip\e[0m \e[37m($city, $country)\e[0m\n"
-  printf "IPv6: \e[33m$ip6\e[0m\n"
-}
 
 function lan(){
   local ip label
@@ -242,17 +223,7 @@ function lan(){
   done < <(ip -o link show up | awk -F': ' '{print $2}' | command grep -vE '^(lo|docker0|br-|veth|virbr)')
 }
 
-function net(){
-  printf "\n"
-  printf "\e[32mWAN\e[0m\n"
-  wan
-  printf "\n\e[32mLAN\e[0m\n"
-  lan
-}
 
-function weather(){
-  curl --max-time 3 'wttr.in?format=3'
-}
 
 function wifi(){
   nmcli radio wifi off && sleep 5 && nmcli radio wifi on
@@ -261,25 +232,8 @@ function wifi(){
 # ============================================================
 # FUNCTIONS — utility
 # ============================================================
-function mcd(){
-  mkdir -p -- "$1" && cd -P -- "$1"
-}
 
-rn() {
-  local _script
-  for _dir in ~/repos/dotfiles ~/Documents/repos/dotfiles; do
-    [[ -f "$_dir/rename.sh" ]] && _script="$_dir/rename.sh" && break
-  done
-  [[ -n $_script ]] && bash "$_script" "$@" || echo "rn: rename.sh not found" >&2
-}
 
-function mo(){
-  local _f="$REPOS/dotfiles/motivation.md"
-  [[ -f "$_f" ]] || curl -fsSo "$_f" https://raw.githubusercontent.com/nealrs/dotfiles/master/motivation.md
-  local things=("${(@f)$(grep '^- ' "$_f" | sed 's/^- //')}")
-  local idx=$(( RANDOM % ${#things[@]} + 1 ))
-  printf "\nBro, ${things[$idx]}.\n"
-}
 
 # ============================================================
 # FUNCTIONS — s3
@@ -336,27 +290,6 @@ function s3(){
 # ============================================================
 # FUNCTIONS — startup greeting
 # ============================================================
-function hi(){
-  if [[ -f "$REPOS/dotfiles/ascii_art.sh" ]]; then
-    source "$REPOS/dotfiles/ascii_art.sh"
-    if [[ -f ~/.hostname ]]; then
-      local _banner="banner_$(cat ~/.hostname)"
-      typeset -f "$_banner" &>/dev/null && "$_banner"
-    fi
-  fi
-
-  echo ""
-  bash "$REPOS/dotfiles/health.sh"
-
-  # Local tmux sessions you can reattach to — fresh terminal only (skip inside
-  # tmux so it's not repeated per pane). Local & instant; sits below health,
-  # above wan/lan. Reports 0 when there are none. `muxall` for the fleet view.
-  [[ -z "$TMUX" ]] && typeset -f muxhere &>/dev/null && muxhere
-  net
-  echo ""
-  weather
-  mo
-}
 
 # ============================================================
 # STARTUP
