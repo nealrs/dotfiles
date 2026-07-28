@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# mux — tmux session picker with a small Claude-style TUI.
+# Run it on a box (`mux`), or reach a remote box's picker via the m<host>
+# aliases / `mssh <host>` (they run: ssh <host>-tailnet -t "~/.local/bin/mux").
+#
+# Lists the persistent tmux sessions on this host and lets you attach to one,
+# start a new named (per-project) session, or drop to a plain shell.
+#
+# Robustness notes:
+#   • If already inside tmux ($TMUX set), it switches the client instead of
+#     nesting a new session (nesting errors out and tears the session down).
+#   • New sessions are created DETACHED first, then attached — so if an attach
+#     ever fails, the session still survives and any error is shown, rather
+#     than the whole session being destroyed silently ([exited]).
+# Symlinked to ~/.local/bin/mux by symlink_dotfiles.sh — edit the repo copy.
+set -u
+
+# ---- palette (only colorize when writing to a terminal) ----
+if [[ -t 1 ]]; then
+  A=$'\e[38;5;209m'      # accent (warm Claude orange)
+  D=$'\e[38;5;245m'      # dim
+  BR=$'\e[38;5;240m'     # border
+  B=$'\e[1m'; R=$'\e[0m'
+else
+  A=; D=; BR=; B=; R=
+fi
+
+W=54
+HR="$(printf '─%.0s' $(seq 1 "$W"))"
+top(){ printf '%s╭%s╮%s\n' "$BR" "$HR" "$R"; }
+sep(){ printf '%s├%s┤%s\n' "$BR" "$HR" "$R"; }
+bot(){ printf '%s╰%s╯%s\n' "$BR" "$HR" "$R"; }
+# padv <visible-length> <already-colored-content>: draws one bordered row,
+# padding by VISIBLE width so embedded color codes don't skew alignment.
+padv(){ local n=$(( W - $1 )); ((n<0)) && n=0; printf '%s│%s%*s%s│%s\n' "$BR" "$2" "$n" "" "$BR" "$R"; }
+
+# `mux help` — tmux shortcut cheat sheet. Shown here, in `h`, and via Ctrl+a ?
+# inside tmux (bound to a popup in tmux.conf). One source of truth.
+show_help(){
+  local sec="  ${A}${B}%s${R}\n" row="    ${A}%-15s${R} ${D}%s${R}\n"
+  printf '\n  %s✦ tmux keys%s  %s· prefix = %sCtrl+a%s%s  (tap it, release, then the next key)%s\n' "$A$B" "$R" "$D" "$A" "$R" "$D" "$R"
+  printf "$sec" "sessions & windows"
+  printf "$row" "Ctrl+a d"      "detach — leaves the session running"
+  printf "$row" "Ctrl+a c"      "new window"
+  printf "$row" "Ctrl+a 1-9"    "jump to window N"
+  printf "$row" "Ctrl+a n / p"  "next / previous window"
+  printf "$row" "Ctrl+a ,"      "rename window"
+  printf "$sec" "panes"
+  printf "$row" "Ctrl+a |"      "split right"
+  printf "$row" "Ctrl+a -"      "split down"
+  printf "$row" "Ctrl+a hjkl"   "move between panes"
+  printf "$row" "Ctrl+a HJKL"   "resize pane"
+  printf "$row" "Ctrl+a z"      "zoom pane (toggle fullscreen)"
+  printf "$row" "Ctrl+a x"      "close pane"
+  printf "$sec" "copy & scroll"
+  printf "$row" "Ctrl+a ["      "scroll / copy mode  (q quits)"
+  printf "$row" "v then y"      "select then yank -> your Mac clipboard"
+  printf "$sec" "misc"
+  printf "$row" "Ctrl+a ?"      "this cheat sheet"
+  printf "$row" "Ctrl+a r"      "reload tmux.conf"
+  printf "$row" "Ctrl+a Ctrl+a" "literal Ctrl+a (jump to line start)"
+  printf "$sec" "connect from your mac"
+  printf "$row" "mgibson"       "attach gibson's picker over tailnet"
+  printf "$row" "mkewtie"       "attach kewtie's picker over tailnet"
+  printf "$row" "mssh <host>"   "picker for any tmux host"
+  printf "$row" "mux"           "picker on the box you're on"
+  echo
+}
+case "${1:-}" in
+  help|keys|-h|--help|"?") show_help; exit 0 ;;
+esac
+
+host="$(hostname -s 2>/dev/null || hostname)"
+
+# ---- gather sessions, most-recently-active first ----
+# Split on US (\037), not tab: tab is IFS-whitespace, so a leading empty field
+# (session_activity/name can't be empty here, but tab-splitting is fragile) would
+# collapse and shift columns. session_activity is always set, unlike last_attached.
+SEP=$(printf '\037')
+names=(); metas=()
+while IFS="$SEP" read -r _sort n m; do
+  names+=("$n"); metas+=("$m")
+done < <(tmux list-sessions -F "#{session_activity}${SEP}#{session_name}${SEP}#{session_windows}w#{?session_attached, · attached,}" 2>/dev/null | sort -t"$SEP" -k1,1nr)
+
+# ---- actions ----
+go_attach(){
+  if [[ -n "${TMUX:-}" ]]; then exec tmux switch-client -t "$1"
+  else exec tmux attach-session -t "$1"; fi
+}
+go_new(){
+  local n="${1:-main}"; n="${n//[.: ]/-}"; n="${n:-main}"
+  tmux has-session -t "$n" 2>/dev/null || tmux new-session -d -s "$n"
+  go_attach "$n"
+}
+go_shell(){ exec "${SHELL:-/bin/bash}" -l; }
+ask_new(){ local n; printf '%s  new session name ›%s ' "$A" "$R"; read -r n; go_new "${n:-main}"; }
+
+# ---- draw ----
+echo
+top
+tp="  ✦  mux · ${host}"          # plain string, measured for padding
+padv "${#tp}" "  ${A}✦${R}  ${A}${B}mux${R} ${D}·${R} ${A}${host}${R}"
+sep
+if ((${#names[@]} == 0)); then
+  np="  no sessions yet — press n to start one"
+  padv "${#np}" "  ${D}no sessions yet — press ${A}n${D} to start one${R}"
+else
+  for i in "${!names[@]}"; do
+    printf -v row "  %d   %-18.18s %s" "$((i + 1))" "${names[i]}" "${metas[i]}"
+    if [[ "${metas[i]}" == *attached* ]]; then padv "${#row}" "${A}${row}${R}"; else padv "${#row}" "${row}"; fi
+  done
+fi
+sep
+hp="  1-9 attach   n new   s shell   q quit"
+padv "${#hp}" "  ${A}1-9${R}${D} attach   ${A}n${R}${D} new   ${A}s${R}${D} shell   ${A}q${R}${D} quit${R}"
+bot
+printf '%s  ›%s ' "$A" "$R"
+read -r choice
+
+case "$choice" in
+  n|N)      ask_new ;;
+  s|S)      go_shell ;;
+  q|Q)      exit 0 ;;
+  "")       if ((${#names[@]} > 0)); then go_attach "${names[0]}"; else go_new main; fi ;;
+  *[!0-9]*) echo "  ${D}? not a choice${R}"; exit 1 ;;
+  *)        idx=$((choice))
+            if ((idx >= 1 && idx <= ${#names[@]})); then go_attach "${names[idx - 1]}"; else echo "  ${D}out of range${R}"; exit 1; fi ;;
+esac

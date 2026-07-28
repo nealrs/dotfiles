@@ -35,6 +35,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
 
   mkdir -p ~/.config/atuin
   symlink_dotfile "$DOTFILES/atuin.toml" ~/.config/atuin/config.toml
+
+  mkdir -p ~/.local/bin
+  symlink_dotfile "$DOTFILES/tmux.conf" ~/.tmux.conf
+  symlink_dotfile "$DOTFILES/mux" ~/.local/bin/mux
 else
   symlink_dotfile "$DOTFILES/.zshrc.linux" ~/.zshrc
   symlink_dotfile "$DOTFILES/.nanorc.linux" ~/.nanorc
@@ -55,4 +59,11 @@ else
 
   mkdir -p ~/.config/atuin
   symlink_dotfile "$DOTFILES/atuin.toml" ~/.config/atuin/config.toml
+
+  # tmux config + the mux picker. Both matter on headless boxes (gibson,
+  # kewtie) — that's where the persistent sessions live — so they sit outside
+  # the HEADLESS/ghostty guard above.
+  mkdir -p ~/.local/bin
+  symlink_dotfile "$DOTFILES/tmux.conf" ~/.tmux.conf
+  symlink_dotfile "$DOTFILES/mux" ~/.local/bin/mux
 fi

@@ -78,6 +78,7 @@ PACKAGES=(
   eza
   bat
   btop
+  tmux
   fd
   ripgrep
   jq

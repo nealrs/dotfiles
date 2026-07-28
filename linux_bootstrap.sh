@@ -210,6 +210,7 @@ PACKAGES=(
   ripgrep
   nano
   btop
+  tmux
   fzf
   jq
   direnv

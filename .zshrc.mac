@@ -308,6 +308,11 @@ function hi(){
 
   echo ""
   bash "$REPOS/dotfiles/health.sh"
+
+  # Local tmux sessions you can reattach to — fresh terminal only (skip inside
+  # tmux so it's not repeated per pane). Local & instant; sits below health,
+  # above wan/lan. Reports 0 when there are none. `muxall` for the fleet view.
+  [[ -z "$TMUX" ]] && typeset -f muxhere &>/dev/null && muxhere
   net
   echo ""
   weather

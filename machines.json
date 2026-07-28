@@ -7,7 +7,8 @@
       "tailscale_hostname": "kewtie",
       "tailscale_alias": "tsk",
       "extra_aliases": [],
-      "ssh_set_env": {"TERM": "xterm-256color"}
+      "tmux": true,
+      "ssh_set_env": {}
     },
     {
       "name": "gibson",
@@ -16,6 +17,7 @@
       "tailscale_hostname": "gibson",
       "tailscale_alias": "tsg",
       "extra_aliases": [],
+      "tmux": true,
       "ssh_set_env": {}
     },
     {

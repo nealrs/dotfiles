@@ -157,6 +157,11 @@ if [[ -f "$DOTFILES/machines.sh" ]]; then
     items[$ssh_title]+="alias	${k}	${aliases[$k]}"$'\n'
   done
   [[ -n "${functions[tssh]}" ]] && items[$ssh_title]+="function	tssh	<name> — ssh to any host in machines.json over tailscale"$'\n'
+  [[ -n "${functions[mssh]}" ]] && items[$ssh_title]+="function	mssh	<name> — attach to a host's tmux session picker over tailscale"$'\n'
+  items[$ssh_title]+="alias	mux	tmux session picker on this box (attach / new / plain shell)"$'\n'
+  items[$ssh_title]+="alias	mux help	tmux keyboard shortcut cheat sheet — also Ctrl+a ? inside tmux"$'\n'
+  [[ -n "${functions[muxall]}" ]] && items[$ssh_title]+="function	muxall	tmux sessions across every box in the fleet (local + remote)"$'\n'
+  [[ -n "${functions[muxhere]}" ]] && items[$ssh_title]+="function	muxhere	local tmux session summary (the hi-banner line)"$'\n'
 fi
 
 printf "\n${BOLD}dotfiles commands${NC}  ${DIM}(%s — %s)${NC}\n" "$PLATFORM" "$ZSHRC"
