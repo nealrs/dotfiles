@@ -19,20 +19,10 @@ set -u
 if [[ -t 1 ]]; then
   A=$'\e[38;5;209m'      # accent (warm Claude orange)
   D=$'\e[38;5;245m'      # dim
-  BR=$'\e[38;5;240m'     # border
   B=$'\e[1m'; R=$'\e[0m'
 else
-  A=; D=; BR=; B=; R=
+  A=; D=; B=; R=
 fi
-
-W=54
-HR="$(printf '─%.0s' $(seq 1 "$W"))"
-top(){ printf '%s╭%s╮%s\n' "$BR" "$HR" "$R"; }
-sep(){ printf '%s├%s┤%s\n' "$BR" "$HR" "$R"; }
-bot(){ printf '%s╰%s╯%s\n' "$BR" "$HR" "$R"; }
-# padv <visible-length> <already-colored-content>: draws one bordered row,
-# padding by VISIBLE width so embedded color codes don't skew alignment.
-padv(){ local n=$(( W - $1 )); ((n<0)) && n=0; printf '%s│%s%*s%s│%s\n' "$BR" "$2" "$n" "" "$BR" "$R"; }
 
 # `mux help` — tmux shortcut cheat sheet. Shown here, in `h`, and via Ctrl+a ?
 # inside tmux (bound to a popup in tmux.conf). One source of truth.
@@ -80,7 +70,7 @@ SEP=$(printf '\037')
 names=(); metas=()
 while IFS="$SEP" read -r _sort n m; do
   names+=("$n"); metas+=("$m")
-done < <(tmux list-sessions -F "#{session_activity}${SEP}#{session_name}${SEP}#{session_windows}w#{?session_attached, · attached,}" 2>/dev/null | sort -t"$SEP" -k1,1nr)
+done < <(tmux list-sessions -F "#{session_activity}${SEP}#{session_name}${SEP}#{session_windows} win#{?session_attached, · attached,}" 2>/dev/null | sort -t"$SEP" -k1,1nr)
 
 # ---- actions ----
 go_attach(){
@@ -95,26 +85,18 @@ go_new(){
 go_shell(){ exec "${SHELL:-/bin/bash}" -l; }
 ask_new(){ local n; printf '%s  new session name ›%s ' "$A" "$R"; read -r n; go_new "${n:-main}"; }
 
-# ---- draw ----
+# ---- draw (borderless: left-aligned, no width math — works in any locale) ----
 echo
-top
-tp="  ✦  mux · ${host}"          # plain string, measured for padding
-padv "${#tp}" "  ${A}✦${R}  ${A}${B}mux${R} ${D}·${R} ${A}${host}${R}"
-sep
+printf '  %s✦ mux%s %s· %s%s\n\n' "$A$B" "$R" "$D" "$host" "$R"
 if ((${#names[@]} == 0)); then
-  np="  no sessions yet — press n to start one"
-  padv "${#np}" "  ${D}no sessions yet — press ${A}n${D} to start one${R}"
+  printf '  %s\n' "${D}no sessions yet — press ${A}n${D} to start one${R}"
 else
   for i in "${!names[@]}"; do
-    printf -v row "  %d   %-18.18s %s" "$((i + 1))" "${names[i]}" "${metas[i]}"
-    if [[ "${metas[i]}" == *attached* ]]; then padv "${#row}" "${A}${row}${R}"; else padv "${#row}" "${row}"; fi
+    printf '  %s%d%s  %-18s %s%s%s\n' "$A" "$((i + 1))" "$R" "${names[i]}" "$D" "${metas[i]}" "$R"
   done
 fi
-sep
-hp="  1-9 attach   n new   s shell   q quit"
-padv "${#hp}" "  ${A}1-9${R}${D} attach   ${A}n${R}${D} new   ${A}s${R}${D} shell   ${A}q${R}${D} quit${R}"
-bot
-printf '%s  ›%s ' "$A" "$R"
+printf '\n  %s\n' "${A}n${R}${D} new · ${A}s${R}${D} shell · ${A}q${R}${D} quit${R}"
+printf '%s› %s' "$A" "$R"
 read -r choice
 
 case "$choice" in
