@@ -30,6 +30,14 @@ REPOS="$HOME/repos"
 [[ ! -d "$REPOS" && -d "$HOME/Documents/repos" ]] && REPOS="$HOME/Documents/repos"
 export VISUAL="nano"
 export EDITOR="nano"
+
+# Ensure a UTF-8 locale (macOS ships en_US.UTF-8, not C.UTF-8). Only acts when
+# the active locale isn't already UTF-8 — normally a no-op on macOS.
+case "${LC_ALL:-}${LC_CTYPE:-}${LANG:-}" in
+  *[Uu][Tt][Ff]*) : ;;
+  *) export LANG=en_US.UTF-8 ;;
+esac
+
 ssh-add --apple-use-keychain ~/.ssh/id_ed25519 2>/dev/null
 ssh-add --apple-use-keychain ~/.ssh/id_rsa 2>/dev/null
 

@@ -39,6 +39,14 @@ export EDITOR="nano"
 export TERM="${TERM:-xterm-256color}"
 export COLORTERM="${COLORTERM:-truecolor}"
 
+# Ensure a UTF-8 locale so tmux/less/etc. don't mangle multibyte glyphs (°, emoji,
+# box art) under a C/POSIX locale — headless boxes often have an empty locale.
+# Only acts when the active locale isn't already UTF-8 (leaves en_US.UTF-8 etc.).
+case "${LC_ALL:-}${LC_CTYPE:-}${LANG:-}" in
+  *[Uu][Tt][Ff]*) : ;;
+  *) export LANG=C.UTF-8 ;;
+esac
+
 [[ -d /var/data ]] && export OLLAMA_MODELS="/var/data/models"
 export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
 
