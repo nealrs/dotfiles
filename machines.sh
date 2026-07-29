@@ -34,6 +34,9 @@ for h in hosts:
     if h.get("tmux"):
         _mcmd = 'ssh ' + name + '-tailnet -t "~/.local/bin/mux"'
         print(f"alias m{name}={shlex.quote(_mcmd)}")
+        # optional short alias, e.g. mg / mk (like tailscale_alias -> tsg/tsk)
+        if h.get("mux_alias"):
+            print(f"alias {h['mux_alias']}={shlex.quote(_mcmd)}")
 
     for extra in h.get("extra_aliases", []):
         print(f"alias {extra}={shlex.quote(f'ssh {name}-lan')}")

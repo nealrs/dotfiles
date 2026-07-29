@@ -8,6 +8,7 @@
       "tailscale_alias": "tsk",
       "extra_aliases": [],
       "tmux": true,
+      "mux_alias": "mk",
       "ssh_set_env": {}
     },
     {
@@ -18,6 +19,7 @@
       "tailscale_alias": "tsg",
       "extra_aliases": [],
       "tmux": true,
+      "mux_alias": "mg",
       "ssh_set_env": {}
     },
     {
