@@ -73,6 +73,17 @@ function updatedots(){
   source ~/.zshrc
 }
 
+# --- exit ---
+# Inside tmux, "exit" detaches instead of killing the shell/pane — no need to
+# reach for the C-a prefix. Ctrl-D and pane-close still kill the shell as usual.
+function exit(){
+  if [[ -n "$TMUX" ]]; then
+    tmux detach-client
+  else
+    builtin exit "$@"
+  fi
+}
+
 # --- hi ---
 function hi(){
   local ascii="$REPOS/dotfiles/ascii_art.sh"
