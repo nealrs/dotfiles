@@ -188,6 +188,12 @@ function lan(){
       fi
     fi
   done < <(networksetup -listallhardwareports)
+
+  # Tailscale's utun interface has no "Hardware Port" entry, so it's invisible
+  # to the loop above — ask the Tailscale CLI directly for its assigned IP.
+  local ts_ip
+  ts_ip=$(tailscale ip -4 2>/dev/null)
+  [[ -n "$ts_ip" ]] && echo "tailscale: \e[33m$ts_ip\e[0m"
 }
 
 function wifi(){
