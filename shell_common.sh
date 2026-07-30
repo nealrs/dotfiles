@@ -43,7 +43,7 @@ function mo(){
   [[ -f "$_f" ]] || curl -fsSo "$_f" https://raw.githubusercontent.com/nealrs/dotfiles/master/motivation.md
   local things=("${(@f)$(grep '^- ' "$_f" | sed 's/^- //')}")
   local idx=$(( RANDOM % ${#things[@]} + 1 ))
-  printf "\nBro, ${things[$idx]}.\n"
+  printf "\n\e[33mBro, ${things[$idx]}.\e[0m\n"
 }
 
 # --- mcd ---
