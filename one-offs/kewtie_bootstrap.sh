@@ -94,6 +94,9 @@ else
   warn "  git config --global user.name \"...\"  &&  git config --global user.email \"...\""
 fi
 
+git config --global init.defaultBranch main
+ok "git default branch: main"
+
 DOTFILES=""
 for candidate in "$HOME/repos/dotfiles" "$HOME/Documents/repos/dotfiles"; do
   if [[ -d "$candidate/.git" ]]; then

@@ -56,3 +56,9 @@ if [[ -L ~/.claude/CLAUDE.md || ! -e ~/.claude/CLAUDE.md ]]; then
 else
   info "~/.claude/CLAUDE.md exists as a real file — skipping (to fix: ln -sf $DOTFILES/claude/CLAUDE.md ~/.claude/CLAUDE.md)"
 fi
+
+if [[ -L ~/.claude/agents || ! -e ~/.claude/agents ]]; then
+  ln -sf "$DOTFILES/claude/agents" ~/.claude/agents && ok "~/.claude/agents → dotfiles"
+else
+  info "~/.claude/agents exists as a real directory — skipping (to fix: rm -rf ~/.claude/agents && ln -sf $DOTFILES/claude/agents ~/.claude/agents)"
+fi

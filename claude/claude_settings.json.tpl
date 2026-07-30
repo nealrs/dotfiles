@@ -33,6 +33,8 @@
       "Bash(docker compose build*)",
       "Bash(docker compose restart*)",
       "Bash(docker compose up*)",
+      "Bash(docker stop*)",
+      "Bash(docker compose down)",
       "Bash(podman ps*)",
       "Bash(podman logs*)",
       "Bash(podman exec*)",
@@ -46,7 +48,41 @@
       "Bash(podman compose build*)",
       "Bash(podman compose restart*)",
       "Bash(podman compose up*)",
+      "Bash(podman stop*)",
+      "Bash(podman compose down)",
       "Bash(sqlite3 -readonly *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git show*)",
+      "Bash(git branch)",
+      "Bash(git branch --list)",
+      "Bash(git branch -a)",
+      "Bash(git branch -v)",
+      "Bash(git branch -vv)",
+      "Bash(git branch -r)",
+      "Bash(aws sts get-caller-identity*)",
+      "Bash(aws s3 ls*)",
+      "Bash(aws s3api list*)",
+      "Bash(aws ec2 describe*)",
+      "Bash(aws rds describe*)",
+      "Bash(aws iam get*)",
+      "Bash(aws iam list*)",
+      "Bash(aws logs describe*)",
+      "Bash(aws cloudformation describe*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue list*)",
+      "Bash(gh repo view*)",
+      "Bash(gh release view*)",
+      "Bash(gh release list*)",
+      "Bash(gh run view*)",
+      "Bash(gh run list*)",
+      "Bash(gh workflow view*)",
+      "Bash(gh workflow list*)",
       "Bash(ls*)",
       "Bash(find *)",
       "Bash(grep *)",
@@ -227,9 +263,56 @@
       "Bash(git push --force*)",
       "Bash(git reset --hard*)",
       "Bash(git clean -f*)",
-      "Bash(chmod -R 777 *)"
+      "Bash(chmod -R 777 *)",
+      "Bash(docker compose down -v*)",
+      "Bash(docker compose down --volumes*)",
+      "Bash(docker volume rm*)",
+      "Bash(docker volume prune*)",
+      "Bash(podman compose down -v*)",
+      "Bash(podman compose down --volumes*)",
+      "Bash(podman volume rm*)",
+      "Bash(podman volume prune*)"
+    ],
+    "ask": [
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(gh release create*)"
     ]
   },
   "defaultMode": "plan",
-  "includeCoAuthoredBy": false
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "fallbackModel": ["sonnet"],
+  "worktree": {
+    "symlinkDirectories": ["node_modules", ".venv", ".cache"]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Branch: $(git branch --show-current 2>/dev/null || echo 'n/a') · Last commit: $(git log --oneline -1 2>/dev/null || echo 'n/a')\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path // empty' 2>/dev/null); [ -n \"$f\" ] && npx --no-install prettier --ignore-unknown --write \"$f\" >/dev/null 2>&1; true"
+          }
+        ]
+      }
+    ]
+  }
 }

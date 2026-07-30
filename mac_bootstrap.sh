@@ -268,6 +268,9 @@ else
   ok "git config set"
 fi
 
+git config --global init.defaultBranch main
+ok "git default branch: main"
+
 # ============================================================
 # DOTFILES
 # ============================================================
