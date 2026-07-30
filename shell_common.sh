@@ -91,8 +91,13 @@ function hi(){
   if [[ -f "$ascii" ]]; then
     source "$ascii"
     if [[ -f ~/.hostname ]]; then
-      local _banner="banner_$(cat ~/.hostname)"
-      typeset -f "$_banner" &>/dev/null && "$_banner"
+      local _host="$(cat ~/.hostname)"
+      local _banner="banner_${_host}"
+      if typeset -f "$_banner" &>/dev/null; then
+        "$_banner"
+      else
+        diamond_banner "$_host"
+      fi
     fi
   fi
 
