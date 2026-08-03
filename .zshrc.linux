@@ -353,3 +353,11 @@ fi
 # zsh-syntax-highlighting (brew install zsh-syntax-highlighting — must be last)
 [ -f "${BREW_PREFIX}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && \
   source "${BREW_PREFIX}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+
+# pnpm
+export PNPM_HOME="/home/nealrs/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+# pnpm end

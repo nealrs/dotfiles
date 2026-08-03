@@ -29,8 +29,15 @@ for h in hosts:
     env     = h.get("ssh_set_env", {})
     env_lines = [f"    SetEnv {k}={v}" for k, v in env.items()]
 
+    # Bare `name` (no -lan/-tailnet suffix) is folded into whichever Host
+    # pattern list mirrors the `name` shell alias in machines.sh: lan when
+    # available, tailnet otherwise. This is what lets scp/rsync/git resolve
+    # `kewtie:` the same way the `kewtie` ssh alias does — those tools match
+    # ~/.ssh/config Host blocks directly and never see shell aliases.
+    bare = "" if ip else f" {name}"
+
     lines.append(f"# {name} — tailnet")
-    lines.append(f"Host {name}-tailnet")
+    lines.append(f"Host {name}-tailnet{bare}")
     lines.append(f"    HostName {ts_host}")
     lines.append(f"    User {user}")
     lines.extend(env_lines)
@@ -38,7 +45,7 @@ for h in hosts:
 
     if ip:
         lines.append(f"# {name} — lan")
-        lines.append(f"Host {name}-lan")
+        lines.append(f"Host {name}-lan {name}")
         lines.append(f"    HostName {ip}")
         lines.append(f"    User {user}")
         lines.extend(env_lines)
