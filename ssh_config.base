@@ -4,6 +4,14 @@
 # macOS-only filtering of UseKeychain itself.
 IgnoreUnknown UseKeychain
 
+# Detect dead connections (e.g. after laptop sleep) instead of hanging in a
+# half-broken state — lets the remote side clean up (disable tmux/vim mouse
+# tracking, etc.) instead of leaving the local terminal echoing raw mouse
+# escape codes on scroll.
+Host *
+    ServerAliveInterval 30
+    ServerAliveCountMax 10
+
 Host github.com
     AddKeysToAgent yes
     UseKeychain yes
