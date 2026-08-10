@@ -102,6 +102,7 @@ alias reload="rehash && source ~/.zshrc"
 alias rel="rehash && source ~/.zshrc"
 alias resource="rehash && source ~/.zshrc"
 alias npm="pnpm"
+alias npx="pnpm exec"
 alias pico="nano"
 
 # ============================================================
