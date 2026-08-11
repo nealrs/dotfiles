@@ -58,7 +58,10 @@ else
 fi
 
 if [[ -L ~/.claude/agents || ! -e ~/.claude/agents ]]; then
-  ln -sf "$DOTFILES/claude/agents" ~/.claude/agents && ok "~/.claude/agents → dotfiles"
+  # -n (not -f alone): without it, ln follows an existing symlink-to-dir and
+  # creates the link *inside* it (dotfiles/claude/agents/agents) instead of
+  # replacing it — a self-referential symlink that reappears on every re-run.
+  ln -sfn "$DOTFILES/claude/agents" ~/.claude/agents && ok "~/.claude/agents → dotfiles"
 else
   info "~/.claude/agents exists as a real directory — skipping (to fix: rm -rf ~/.claude/agents && ln -sf $DOTFILES/claude/agents ~/.claude/agents)"
 fi
