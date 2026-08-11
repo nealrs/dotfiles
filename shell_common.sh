@@ -84,6 +84,20 @@ function exit(){
   fi
 }
 
+# --- ssh ---
+# Wraps every ssh call (aliases/tssh/mssh/muxall all funnel through this) to
+# reset local mouse-tracking modes on exit. A remote tmux/vim turns these on
+# in the LOCAL terminal via escape codes; if the connection dies uncleanly
+# (e.g. laptop sleep), the remote never gets to send the matching disable
+# codes and the terminal is left echoing raw mouse escapes on every move.
+# No-op if mouse mode was never touched.
+function ssh(){
+  command ssh "$@"
+  local ec=$?
+  printf '\e[?1000l\e[?1002l\e[?1003l\e[?1006l'
+  return $ec
+}
+
 # --- hi ---
 function hi(){
   local ascii="$REPOS/dotfiles/ascii_art.sh"
