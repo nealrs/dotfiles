@@ -8,6 +8,7 @@
   "permissions": {
     "allow": [
       "mcp__claude_ai_neal_todo__*",
+      "mcp__jobbot__*",
       "WebSearch",
       "WebFetch",
       "Read",
