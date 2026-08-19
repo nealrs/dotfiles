@@ -42,8 +42,8 @@ register_mcp_server() {
       token="$old_token"
       info "op read failed for $name mcp token — keeping previously registered token"
     else
-      info "op read failed for $name mcp token and no previous registration found — sign into 1Password and re-run updatedots"
-      return
+      token="REPLACE_ME"
+      info "op read failed for $name mcp token and no previous registration found — registering with a placeholder token; edit ~/.claude.json (mcpServers.$name.url) to add the real one"
     fi
   fi
 
@@ -56,8 +56,10 @@ register_mcp_server() {
 }
 
 if command -v claude &>/dev/null; then
-  register_mcp_server "neal-todos" "http://kewtie:3737/mcp" "op://Private/to-do-mcp/token"
-  register_mcp_server "jobbot" "http://kewtie:4242/mcp" "op://Private/jobbot-mcp/token"
+  # Raw tailnet IP, not the "kewtie" MagicDNS name — claude's MCP client
+  # fails to connect over the hostname for reasons unconfirmed.
+  register_mcp_server "neal-todos" "http://100.81.255.110:3737/mcp" "op://Private/to-do-mcp/token"
+  register_mcp_server "jobbot" "http://100.81.255.110:4242/mcp" "op://Private/jobbot-mcp/token"
 else
   info "claude CLI not found — skipping MCP server registration"
 fi
