@@ -68,8 +68,8 @@ function updatedots(){
   DOTFILES="$REPOS/dotfiles"
   source "$DOTFILES/symlink_dotfiles.sh"
   source "$DOTFILES/claude/claude_settings.sh"
-  unset -f ok info inject_mcp_token symlink_dotfile
-  unset DOTFILES OLD_TODO_TOKEN OLD_JOBBOT_TOKEN TOKEN JOBBOT_TOKEN
+  unset -f ok info register_mcp_server symlink_dotfile
+  unset DOTFILES
   source ~/.zshrc
 }
 
