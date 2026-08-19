@@ -279,6 +279,7 @@
     ]
   },
   "defaultMode": "plan",
+  "remoteControlAtStartup": true,
   "attribution": {
     "commit": "",
     "pr": ""
