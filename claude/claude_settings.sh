@@ -1,75 +1,66 @@
 #!/usr/bin/env bash
-# Writes ~/.claude/settings.json from the template, then separately injects
-# the neal-todo mcp token via 1Password. Config first, secret second: the
-# 1Password step (session sign-in, timeouts, etc.) is the flakiest part of
-# bootstrap, so it shouldn't block permissions/mcp config from refreshing.
+# Writes ~/.claude/settings.json from the template, then registers jobbot and
+# neal-todos as user-scope MCP servers via `claude mcp add`, injecting tokens
+# via 1Password.
+#
+# IMPORTANT: MCP server connections are NOT configured via settings.json's
+# "mcpServers" key — Claude Code doesn't read that. Servers live in
+# ~/.claude.json (user/local scope, written by `claude mcp add`) or a
+# project's .mcp.json. An earlier version of this script hand-wrote a
+# mcpServers block into settings.json; it silently did nothing, for both
+# jobbot and neal-todos, potentially for a long while. Don't revert to that.
+#
+# Config first, secret second: the 1Password step (session sign-in, timeouts,
+# etc.) is the flakiest part of bootstrap, so it shouldn't block permissions
+# from refreshing.
 #
 # Sourced by linux_bootstrap.sh and mac_bootstrap.sh — expects $DOTFILES and
 # the info/ok helpers to already be defined by the caller.
 
 mkdir -p ~/.claude
 
-# Carry forward previously-injected tokens so re-running this on a box
-# that's signed out of 1Password doesn't wipe out a working mcp token.
-OLD_TODO_TOKEN=""
-OLD_JOBBOT_TOKEN=""
-if [[ -f ~/.claude/settings.json ]]; then
-  OLD_TODO_TOKEN=$(jq -r '.mcpServers["neal-todos"].url // empty | sub("^.*/mcp/"; "")' ~/.claude/settings.json 2>/dev/null)
-  [[ "$OLD_TODO_TOKEN" == "__TODO_MCP_TOKEN__" ]] && OLD_TODO_TOKEN=""
-  OLD_JOBBOT_TOKEN=$(jq -r '.mcpServers["jobbot"].url // empty | sub("^.*/mcp/"; "")' ~/.claude/settings.json 2>/dev/null)
-  [[ "$OLD_JOBBOT_TOKEN" == "__JOBBOT_MCP_TOKEN__" ]] && OLD_JOBBOT_TOKEN=""
-fi
-
 cp "$DOTFILES/claude/claude_settings.json.tpl" ~/.claude/settings.json && ok "~/.claude/settings.json written"
+chmod 600 ~/.claude/settings.json
 
-# $1: mcpServers key, $2: placeholder token in the template, $3: real token
-inject_mcp_token() {
-  local server="$1" placeholder="$2" token="$3"
-  jq --arg t "$token" --arg s "$server" '.mcpServers[$s].url |= (rtrimstr("'"$placeholder"'") + $t)' ~/.claude/settings.json > ~/.claude/settings.json.tmp \
-    && mv ~/.claude/settings.json.tmp ~/.claude/settings.json
-  local rc=$?
-  rm -f ~/.claude/settings.json.tmp
-  return "$rc"
+# $1: server name, $2: base url (no trailing token), $3: 1Password ref
+register_mcp_server() {
+  local name="$1" base_url="$2" op_ref="$3"
+  local old_token="" token=""
+
+  # Carry forward the currently-registered token so re-running this on a box
+  # that's signed out of 1Password doesn't wipe out a working mcp server.
+  if [[ -f ~/.claude.json ]]; then
+    old_token=$(jq -r --arg n "$name" '.mcpServers[$n].url // empty | sub("^.*/mcp/"; "")' ~/.claude.json 2>/dev/null)
+  fi
+
+  if command -v op &>/dev/null; then
+    token=$(op read "$op_ref" 2>/dev/null)
+  fi
+
+  if [[ -z "$token" ]]; then
+    if [[ -n "$old_token" ]]; then
+      token="$old_token"
+      info "op read failed for $name mcp token — keeping previously registered token"
+    else
+      info "op read failed for $name mcp token and no previous registration found — sign into 1Password and re-run updatedots"
+      return
+    fi
+  fi
+
+  claude mcp remove "$name" --scope user &>/dev/null
+  if claude mcp add --transport http "$name" "${base_url}/${token}" --scope user &>/dev/null; then
+    ok "$name mcp server registered (user scope)"
+  else
+    info "$name mcp server registration failed — re-run updatedots"
+  fi
 }
 
-[[ -n "$OLD_TODO_TOKEN" ]] && inject_mcp_token "neal-todos" "__TODO_MCP_TOKEN__" "$OLD_TODO_TOKEN"
-[[ -n "$OLD_JOBBOT_TOKEN" ]] && inject_mcp_token "jobbot" "__JOBBOT_MCP_TOKEN__" "$OLD_JOBBOT_TOKEN"
-
-if command -v op &>/dev/null; then
-  info "Injecting neal-todo mcp token via 1Password..."
-  TOKEN=$(op read "op://Private/to-do-mcp/token" 2>/dev/null)
-  if [[ -n "$TOKEN" ]]; then
-    inject_mcp_token "neal-todos" "__TODO_MCP_TOKEN__" "$TOKEN" && ok "neal-todo mcp token injected" || info "token injection failed — re-run updatedots"
-  elif [[ -n "$OLD_TODO_TOKEN" ]]; then
-    info "op read failed — keeping previously injected neal-todo token (sign into 1Password to refresh)"
-  else
-    info "op read failed — sign into 1Password and re-run updatedots"
-  fi
-
-  info "Injecting jobbot mcp token via 1Password..."
-  JOBBOT_TOKEN=$(op read "op://Private/jobbot-mcp/token" 2>/dev/null)
-  if [[ -n "$JOBBOT_TOKEN" ]]; then
-    inject_mcp_token "jobbot" "__JOBBOT_MCP_TOKEN__" "$JOBBOT_TOKEN" && ok "jobbot mcp token injected" || info "token injection failed — re-run updatedots"
-  elif [[ -n "$OLD_JOBBOT_TOKEN" ]]; then
-    info "op read failed — keeping previously injected jobbot token (sign into 1Password to refresh)"
-  else
-    info "op read failed — sign into 1Password and re-run updatedots"
-  fi
+if command -v claude &>/dev/null; then
+  register_mcp_server "neal-todos" "http://kewtie:3737/mcp" "op://Private/to-do-mcp/token"
+  register_mcp_server "jobbot" "http://kewtie:4242/mcp" "op://Private/jobbot-mcp/token"
 else
-  if [[ -n "$OLD_TODO_TOKEN" ]]; then
-    info "1Password CLI not ready — keeping previously injected neal-todo token"
-  else
-    info "1Password CLI not ready — skipping neal-todo mcp token (run updatedots after signing in)"
-  fi
-  if [[ -n "$OLD_JOBBOT_TOKEN" ]]; then
-    info "1Password CLI not ready — keeping previously injected jobbot token"
-  else
-    info "1Password CLI not ready — skipping jobbot mcp token (run updatedots after signing in)"
-  fi
+  info "claude CLI not found — skipping MCP server registration"
 fi
-
-# Contains a live auth token — not group/world readable.
-chmod 600 ~/.claude/settings.json
 
 if [[ -L ~/.claude/CLAUDE.md || ! -e ~/.claude/CLAUDE.md ]]; then
   ln -sf "$DOTFILES/claude/CLAUDE.md" ~/.claude/CLAUDE.md && ok "~/.claude/CLAUDE.md → dotfiles"

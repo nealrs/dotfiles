@@ -1,17 +1,8 @@
 {
-  "mcpServers": {
-    "neal-todos": {
-      "type": "http",
-      "url": "http://kewtie:3737/mcp/__TODO_MCP_TOKEN__"
-    },
-    "jobbot": {
-      "type": "http",
-      "url": "http://kewtie:4242/mcp/__JOBBOT_MCP_TOKEN__"
-    }
-  },
   "permissions": {
     "allow": [
       "mcp__claude_ai_neal_todo__*",
+      "mcp__neal-todos__*",
       "mcp__jobbot__*",
       "WebSearch",
       "WebFetch",
