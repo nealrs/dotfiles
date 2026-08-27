@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Writes ~/.claude/settings.json from the template, then registers jobbot and
-# neal-todos as user-scope MCP servers via `claude mcp add`, injecting tokens
-# via 1Password.
+# Writes ~/.claude/settings.json from the template, then registers jobbot,
+# neal-todos, and stonks-mcp as user-scope MCP servers via `claude mcp add`,
+# injecting tokens via 1Password.
 #
 # IMPORTANT: MCP server connections are NOT configured via settings.json's
 # "mcpServers" key — Claude Code doesn't read that. Servers live in
@@ -60,6 +60,7 @@ if command -v claude &>/dev/null; then
   # fails to connect over the hostname for reasons unconfirmed.
   register_mcp_server "neal-todos" "http://100.81.255.110:3737/mcp" "op://Private/to-do-mcp/token"
   register_mcp_server "jobbot" "http://100.81.255.110:4242/mcp" "op://Private/jobbot-mcp/token"
+  register_mcp_server "stonks-mcp" "http://100.81.255.110:6767/mcp" "op://Private/stonks-mcp/token"
 else
   info "claude CLI not found — skipping MCP server registration"
 fi

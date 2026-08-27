@@ -4,6 +4,7 @@
       "mcp__claude_ai_neal_todo__*",
       "mcp__neal-todos__*",
       "mcp__jobbot__*",
+      "mcp__stonks-mcp__*",
       "WebSearch",
       "WebFetch",
       "Read",
