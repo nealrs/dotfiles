@@ -29,6 +29,23 @@ for h in hosts:
     env     = h.get("ssh_set_env", {})
     env_lines = [f"    SetEnv {k}={v}" for k, v in env.items()]
 
+    # lan_only: device isn't on the tailnet (IP cameras and similar), so a
+    # <name>-tailnet block would only ever produce a name that never
+    # resolves. identity_file: per-host key, for devices that shouldn't be
+    # offered the personal id_ed25519 (the cameras share a dedicated fleet
+    # key instead).
+    lan_only = h.get("lan_only", False)
+    ident    = h.get("identity_file")
+    ident_lines = []
+    if ident:
+        # IdentitiesOnly stops ssh from walking every agent key first, which
+        # matters on dropbear devices that drop the connection after a few
+        # failed offers.
+        ident_lines = [f"    IdentityFile {ident}", "    IdentitiesOnly yes"]
+
+    if lan_only and not ip:
+        continue  # nothing addressable to emit
+
     # Bare `name` (no -lan/-tailnet suffix) is folded into whichever Host
     # pattern list mirrors the `name` shell alias in machines.sh: lan when
     # available, tailnet otherwise. This is what lets scp/rsync/git resolve
@@ -36,12 +53,14 @@ for h in hosts:
     # ~/.ssh/config Host blocks directly and never see shell aliases.
     bare = "" if ip else f" {name}"
 
-    lines.append(f"# {name} — tailnet")
-    lines.append(f"Host {name}-tailnet{bare}")
-    lines.append(f"    HostName {ts_host}")
-    lines.append(f"    User {user}")
-    lines.extend(env_lines)
-    lines.append("")
+    if not lan_only:
+        lines.append(f"# {name} — tailnet")
+        lines.append(f"Host {name}-tailnet{bare}")
+        lines.append(f"    HostName {ts_host}")
+        lines.append(f"    User {user}")
+        lines.extend(env_lines)
+        lines.extend(ident_lines)
+        lines.append("")
 
     if ip:
         lines.append(f"# {name} — lan")
@@ -49,6 +68,7 @@ for h in hosts:
         lines.append(f"    HostName {ip}")
         lines.append(f"    User {user}")
         lines.extend(env_lines)
+        lines.extend(ident_lines)
         lines.append("")
 
 if os.path.isfile(base_path):

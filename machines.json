@@ -30,6 +30,43 @@
       "tailscale_alias": "tsd",
       "extra_aliases": [],
       "ssh_set_env": {}
+    },
+
+    {
+      "name": "cam-office",
+      "user": "root",
+      "local_ip": "192.168.5.238",
+      "lan_only": true,
+      "identity_file": "~/.ssh/thingino_fleet",
+      "extra_aliases": [],
+      "ssh_set_env": {}
+    },
+    {
+      "name": "cam-living",
+      "user": "root",
+      "local_ip": "192.168.5.239",
+      "lan_only": true,
+      "identity_file": "~/.ssh/thingino_fleet",
+      "extra_aliases": [],
+      "ssh_set_env": {}
+    },
+    {
+      "name": "cam-basement",
+      "user": "root",
+      "local_ip": "192.168.5.240",
+      "lan_only": true,
+      "identity_file": "~/.ssh/thingino_fleet",
+      "extra_aliases": [],
+      "ssh_set_env": {}
+    },
+    {
+      "name": "cam-pantry",
+      "user": "root",
+      "local_ip": "192.168.5.241",
+      "lan_only": true,
+      "identity_file": "~/.ssh/thingino_fleet",
+      "extra_aliases": [],
+      "ssh_set_env": {}
     }
   ]
 }
