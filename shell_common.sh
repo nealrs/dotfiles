@@ -184,8 +184,8 @@ function hi(){
     local _mf=~/.cache/dotfiles/maint_last_run
     local _mage=$(( ( $(date +%s) - $(cat "$_mf" 2>/dev/null || echo 0) ) / 86400 ))
     if [[ ! -f "$_mf" || $_mage -ge 30 ]]; then
-      printf "\e[33m→ upkeep check: %s — run \`maint\`\e[0m\n" \
-        "$([[ -f "$_mf" ]] && echo "${_mage}d ago" || echo "never run")"
+      printf "\e[33m→ last \`maint\` run: %s — run \`maint\`\e[0m\n" \
+        "$([[ -f "$_mf" ]] && echo "${_mage} days ago" || echo "never")"
     fi
   fi
 

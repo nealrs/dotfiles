@@ -124,6 +124,7 @@ if command -v npm &>/dev/null || command -v pnpm &>/dev/null || command -v uv &>
     npm_out="$(npm outdated -g 2>/dev/null)"
     if [[ -n "$npm_out" ]]; then
       row "npm -g (real)" "$(echo "$npm_out" | tail -n +2 | wc -l | tr -d ' ') outdated"
+      suggest "command npm update -g  # 'command' bypasses the npm->pnpm alias"
     else
       row "npm -g (real)" "none"
     fi
@@ -132,6 +133,7 @@ if command -v npm &>/dev/null || command -v pnpm &>/dev/null || command -v uv &>
     pnpm_out="$(pnpm outdated -g 2>/dev/null)"
     if [[ -n "$pnpm_out" ]]; then
       row "pnpm -g" "$(echo "$pnpm_out" | tail -n +2 | wc -l | tr -d ' ') outdated"
+      suggest "pnpm update -g"
     else
       row "pnpm -g" "none"
     fi
@@ -140,7 +142,8 @@ if command -v npm &>/dev/null || command -v pnpm &>/dev/null || command -v uv &>
     # uv has no reliable "outdated" flag as of this writing — just surface
     # the installed count and point at the manual upgrade command.
     uv_count="$(uv tool list 2>/dev/null | grep -c '^[a-zA-Z]')"
-    row "uv tools" "$uv_count installed — \`uv tool upgrade --all\` to refresh"
+    row "uv tools" "$uv_count installed"
+    [[ "$uv_count" -gt 0 ]] && suggest "uv tool upgrade --all"
   fi
 fi
 
@@ -149,9 +152,17 @@ fi
 # ============================================================
 section "Uptime"
 if [[ "$OS" == "Darwin" ]]; then
-  boot="$(sysctl -n kern.boottime | sed -E 's/.*sec = ([0-9]+).*/\1/')"
-  elapsed=$(( $(date +%s) - boot ))
-  row "Since boot" "$(( elapsed/86400 ))d $(( (elapsed%86400)/3600 ))h"
+  # awk field-split on non-digits, same technique health.sh already uses for
+  # vm_stat — more robust than a regex against BSD sed's quirks (a sed -E
+  # capture-group version of this silently failed to parse and produced a
+  # bogus ~56-year uptime instead of erroring, hence the explicit guard below).
+  boot="$(sysctl -n kern.boottime | awk -F'[^0-9]+' '{print $2}')"
+  if [[ -n "$boot" && "$boot" -gt 0 ]]; then
+    elapsed=$(( $(date +%s) - boot ))
+    row "Since boot" "$(( elapsed/86400 ))d $(( (elapsed%86400)/3600 ))h"
+  else
+    row "Since boot" "couldn't parse kern.boottime — got: $(sysctl -n kern.boottime 2>&1)"
+  fi
 else
   row "Since boot" "$(uptime -p 2>/dev/null | sed 's/^up //')"
   [[ -f /var/run/reboot-required ]] && row "Reboot" "required (kernel/lib update pending)"
