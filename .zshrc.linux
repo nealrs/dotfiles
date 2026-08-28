@@ -36,6 +36,7 @@ REPOS="$HOME/repos"
 
 export VISUAL="nano"
 export EDITOR="nano"
+export BAT_PAGER="less -RK --mouse"  # bat's default (less -R -K) omits --mouse, breaking wheel-scroll in tmux
 export TERM="${TERM:-xterm-256color}"
 export COLORTERM="${COLORTERM:-truecolor}"
 

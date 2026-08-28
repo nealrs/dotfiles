@@ -30,6 +30,7 @@ REPOS="$HOME/repos"
 [[ ! -d "$REPOS" && -d "$HOME/Documents/repos" ]] && REPOS="$HOME/Documents/repos"
 export VISUAL="nano"
 export EDITOR="nano"
+export BAT_PAGER="less -RK --mouse"  # bat's default (less -R -K) omits --mouse, breaking wheel-scroll in tmux
 
 # Ensure a UTF-8 locale (macOS ships en_US.UTF-8, not C.UTF-8). Only acts when
 # the active locale isn't already UTF-8 — normally a no-op on macOS.
