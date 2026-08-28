@@ -98,6 +98,48 @@ function ssh(){
   return $ec
 }
 
+# --- push ---
+# rsync a local file/dir to a host (any alias from ~/.ssh/config, e.g. kewtie,
+# tsk). Resumable + real progress, unlike scp; files and directories both just
+# work, no separate -r to remember. Remote path defaults to the basename in
+# the remote home dir. Directories are synced by contents (trailing slash
+# added automatically) into a dest dir of that same name, so re-running push
+# on the same folder updates it in place instead of nesting it a level deeper
+# the second time — the classic rsync/scp trailing-slash trap.
+push(){
+  local src="$1" host="$2" dest="$3"
+  if [[ -z "$src" || -z "$host" ]]; then
+    echo "usage: push <local-path> <host> [remote-path]" >&2
+    return 1
+  fi
+  if [[ ! -e "$src" ]]; then
+    echo "push: no such local file/dir: $src" >&2
+    return 1
+  fi
+  [[ -z "$dest" ]] && dest="${src:t}"
+  [[ -d "$src" ]] && src="${src%/}/"
+  rsync -avz --progress -e ssh -- "$src" "${host}:${dest}"
+}
+
+# --- pull ---
+# Inverse of push: rsync a file/dir from a host to local, same idempotent
+# directory-contents behavior (see push). Local path defaults to the remote
+# basename in the current directory. Costs one quick `ssh -- [ -d ... ]`
+# round trip to tell whether the remote path is a directory, since that
+# can't be known locally the way it can for push.
+pull(){
+  local host="$1" src="$2" dest="$3"
+  if [[ -z "$host" || -z "$src" ]]; then
+    echo "usage: pull <host> <remote-path> [local-path]" >&2
+    return 1
+  fi
+  [[ -z "$dest" ]] && dest="${src:t}"
+  if ssh -o BatchMode=yes -o ConnectTimeout=5 "$host" "[ -d ${(q)src} ]" 2>/dev/null; then
+    src="${src%/}/"
+  fi
+  rsync -avz --progress -e ssh -- "${host}:${src}" "$dest"
+}
+
 # --- hi ---
 function hi(){
   local ascii="$REPOS/dotfiles/ascii_art.sh"
