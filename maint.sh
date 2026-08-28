@@ -124,9 +124,13 @@ if command -v pnpm &>/dev/null || command -v uv &>/dev/null; then
   # `pnpm update -g` hit the exact same pnpm global-store error), so
   # there's no genuinely distinct npm install to report on.
   if command -v pnpm &>/dev/null; then
-    pnpm_out="$(pnpm outdated -g 2>/dev/null)"
-    if [[ -n "$pnpm_out" ]]; then
-      row "pnpm -g" "$(echo "$pnpm_out" | tail -n +2 | wc -l | tr -d ' ') outdated"
+    # --format json + counting top-level keys (2-space-indented lines)
+    # instead of parsing the default box-drawn table: `tail -n +2 | wc -l`
+    # was counting header/separator/border lines as "outdated" packages.
+    pnpm_out="$(pnpm outdated -g --format json 2>/dev/null)"
+    pnpm_count="$(echo "$pnpm_out" | grep -c '^  "')"
+    if [[ "$pnpm_count" -gt 0 ]]; then
+      row "pnpm -g" "$pnpm_count outdated"
       suggest "pnpm update -g"
     else
       row "pnpm -g" "none"
