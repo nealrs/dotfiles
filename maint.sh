@@ -116,19 +116,13 @@ fi
 # ============================================================
 # Dev tool globals
 # ============================================================
-if command -v npm &>/dev/null || command -v pnpm &>/dev/null || command -v uv &>/dev/null; then
+if command -v pnpm &>/dev/null || command -v uv &>/dev/null; then
   section "Dev tool globals"
-  if command -v npm &>/dev/null; then
-    # Real npm binary — npm is aliased to pnpm interactively (.zshrc.*), so
-    # this checks the underlying install you don't actually use day-to-day.
-    npm_out="$(npm outdated -g 2>/dev/null)"
-    if [[ -n "$npm_out" ]]; then
-      row "npm -g (real)" "$(echo "$npm_out" | tail -n +2 | wc -l | tr -d ' ') outdated"
-      suggest "command npm update -g  # 'command' bypasses the npm->pnpm alias"
-    else
-      row "npm -g (real)" "none"
-    fi
-  fi
+  # No separate npm check: `npm` is aliased to pnpm interactively
+  # (.zshrc.*), and in practice even `command npm` resolves to pnpm's
+  # internals on this setup (confirmed — `command npm update -g` and
+  # `pnpm update -g` hit the exact same pnpm global-store error), so
+  # there's no genuinely distinct npm install to report on.
   if command -v pnpm &>/dev/null; then
     pnpm_out="$(pnpm outdated -g 2>/dev/null)"
     if [[ -n "$pnpm_out" ]]; then
