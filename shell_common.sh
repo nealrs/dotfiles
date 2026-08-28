@@ -140,6 +140,18 @@ pull(){
   rsync -avz --progress -e ssh -- "${host}:${src}" "$dest"
 }
 
+# --- maint ---
+# Occasional system upkeep report (brew, docker/podman, dotfiles staleness,
+# OS-specific extras) — see maint.sh for what it actually checks. Report/
+# suggest only, never runs an upgrade/cleanup/prune itself. Stamps a
+# last-run timestamp so hi() can nag if it's been 30+ days (see below) —
+# written on completion regardless of what the checks found; it marks
+# "you looked," not "everything's clean."
+maint(){
+  bash "$REPOS/dotfiles/maint.sh" "$@"
+  mkdir -p ~/.cache/dotfiles && date +%s > ~/.cache/dotfiles/maint_last_run
+}
+
 # --- hi ---
 function hi(){
   local ascii="$REPOS/dotfiles/ascii_art.sh"
@@ -164,6 +176,19 @@ function hi(){
   # tmux so it's not repeated per pane). Local & instant; sits below health,
   # above wan/lan. Reports 0 when there are none. `muxall` for the fleet view.
   [[ -z "$TMUX" ]] && typeset -f muxhere &>/dev/null && muxhere
+
+  # `maint` staleness nag — fresh terminal only (same guard as muxhere,
+  # same reasoning: don't repeat this once per tmux pane). Only checks a
+  # timestamp file; never runs the actual checks itself.
+  if [[ -z "$TMUX" ]]; then
+    local _mf=~/.cache/dotfiles/maint_last_run
+    local _mage=$(( ( $(date +%s) - $(cat "$_mf" 2>/dev/null || echo 0) ) / 86400 ))
+    if [[ ! -f "$_mf" || $_mage -ge 30 ]]; then
+      printf "\e[33m→ upkeep check: %s — run \`maint\`\e[0m\n" \
+        "$([[ -f "$_mf" ]] && echo "${_mage}d ago" || echo "never run")"
+    fi
+  fi
+
   net
   echo ""
   weather
