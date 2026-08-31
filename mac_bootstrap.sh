@@ -79,6 +79,7 @@ PACKAGES=(
   bat
   btop
   tmux
+  tpm
   fd
   ripgrep
   jq

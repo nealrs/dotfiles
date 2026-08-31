@@ -211,6 +211,7 @@ PACKAGES=(
   nano
   btop
   tmux
+  tpm
   fzf
   jq
   direnv
