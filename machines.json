@@ -31,7 +31,6 @@
       "extra_aliases": [],
       "ssh_set_env": {}
     },
-
     {
       "name": "cam-office",
       "user": "root",
@@ -51,7 +50,7 @@
       "ssh_set_env": {}
     },
     {
-      "name": "cam-basement",
+      "name": "cam-garage",
       "user": "root",
       "local_ip": "192.168.5.240",
       "lan_only": true,
@@ -60,7 +59,7 @@
       "ssh_set_env": {}
     },
     {
-      "name": "cam-pantry",
+      "name": "cam-basement",
       "user": "root",
       "local_ip": "192.168.5.241",
       "lan_only": true,
