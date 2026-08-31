@@ -287,7 +287,8 @@
   },
   "fallbackModel": ["sonnet"],
   "worktree": {
-    "symlinkDirectories": ["node_modules", ".venv", ".cache"]
+    "symlinkDirectories": ["node_modules", ".venv", ".cache"],
+    "baseRef": "head"
   },
   "hooks": {
     "SessionStart": [
