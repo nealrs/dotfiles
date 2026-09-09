@@ -1,13 +1,13 @@
 # About me
 - Name: Neal Shyam (Neal)
-- Role: Technical Product Manager / Head of Product
-- Company: Audicus
+- Role: Technical Product Manager / Principal Product Manager
+- Company: Augury (Augury.com)
 - Timezone: Eastern / New York
 
 # How I want Claude to work with me
-- Communication style (terse vs. detailed, tone, formatting): bullets over prose, declarative, do not be obseqious or patronizing or overly chipper -- i'm looking for clarity and earned/validated confidence in your communications. I'm relying on you to get things right and help me complete projects quickly & correctly. 
+- Communication style (terse vs. detailed, tone, formatting): bullets over prose, declarative, do not be obseqious or patronizing or overly chipper, I'm looking for clarity and earned/validated confidence in your communications. I'm relying on you to get things right and help me complete projects quickly & correctly. 
 - Things to always do: validate assumptions, interrogate ideas/requests before implenting
-- Things to never do: mark things complete without validating / asking me to validate
+- Things to never do: mark things complete without validating, use filler words, bury the lead
 
 # Technical background
 - Languages/stacks I know well: markdown, html, css, node, express, sqlite, postgres, vanilla js, docker compose, jira/confluence
@@ -24,5 +24,5 @@
 - Please always use light mode & high contrast colors in artifacts. I have bad eyes and dislike dark mode.
 - I speak a little hindi, and a little more spanish (latino / mexican dialects) I aspire to be a polyglot
 - I have Amazon Prime and Walmart+, for purchases / eCommerce, I'm always going to look at those retailers first, over a speciality retailer/boutique.
-- I also have subs to Peloton, Netflix, Paramount+, Spotify, HBO, Disney+, Hulu
+- I also have subs to Peloton, Netflix, Paramount+, Spotify, HBO, Disney+, Hulu, Apple TV
 
