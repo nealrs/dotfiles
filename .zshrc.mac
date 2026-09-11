@@ -23,6 +23,12 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
 export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
 
+# ~/.local/bin holds symlinked repo scripts (e.g. `mux`). uv's curl installer
+# would add this via ~/.local/bin/env, but mac_bootstrap.sh installs uv through
+# Homebrew instead, which never creates that file — so it must be added here
+# directly or ~/.local/bin never lands on PATH.
+export PATH="$HOME/.local/bin:$PATH"
+
 export PNPM_HOME="$HOME/Library/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 
